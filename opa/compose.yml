@@ -1,0 +1,14 @@
+services:
+  opa:
+    image: openpolicyagent/opa:latest
+    container_name: ceph-opa
+    ports:
+      - "8181:8181"
+    volumes:
+      - ./policies:/policies
+    command:
+      - "run"
+      - "--server"
+      - "--log-level=debug"
+      - "/policies"
+      - "--addr=0.0.0.0:8181"
