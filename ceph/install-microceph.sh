@@ -42,9 +42,7 @@ echo "=== Aktiviere Ceph Dashboard (REST API für FastAPI) ==="
 sudo /snap/bin/microceph.ceph config set mgr mgr/dashboard/ssl false
 sudo /snap/bin/microceph.ceph config set mgr mgr/dashboard/server_port 8081
 sudo /snap/bin/microceph.ceph mgr module enable dashboard
-echo "ceph-password" > /tmp/dashboard-pw.txt
-sudo /snap/bin/microceph.ceph dashboard ac-user-create admin administrator -i /tmp/dashboard-pw.txt
-rm /tmp/dashboard-pw.txt
+echo "ceph-password" | sudo /snap/bin/microceph.ceph dashboard ac-user-create admin administrator -i -
 
 echo "=== Installation abgeschlossen! ==="
 echo "RGW Ägypten (Master): http://localhost:80"
