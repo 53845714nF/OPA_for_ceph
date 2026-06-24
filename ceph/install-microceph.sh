@@ -36,6 +36,9 @@ sudo /snap/bin/microceph.ceph auth get-or-create client.rgw.irak osd 'allow rwx'
 # Starte den Haupt-Dienst neu für Zone Ägypten
 sudo snap restart microceph.rgw
 
+# Beende alte RGW-Instanz für Irak, falls vorhanden
+sudo pkill -f "radosgw.*client.rgw.irak" || true
+
 sudo snap run --shell microceph.rgw -c 'radosgw -c /var/snap/microceph/current/conf/ceph.conf -n client.rgw.irak -k /tmp/client.rgw.irak.keyring --rgw-zone=irak --rgw-frontends="beast port=8001"' &
 
 echo "=== Aktiviere Ceph Dashboard (REST API für FastAPI) ==="

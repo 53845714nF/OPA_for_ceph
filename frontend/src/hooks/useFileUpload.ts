@@ -7,6 +7,7 @@ export interface UploadFileParams {
   file: File;
   author: string;
   accessionIdentifier: string;
+  retentionDays?: number;
 }
 
 const uploadFile = async (params: UploadFileParams): Promise<any> => {
@@ -15,6 +16,9 @@ const uploadFile = async (params: UploadFileParams): Promise<any> => {
   formData.append('category', params.category);
   formData.append('author', params.author);
   formData.append('accessionIdentifier', params.accessionIdentifier);
+  if (params.retentionDays !== undefined) {
+    formData.append('retentionDays', params.retentionDays.toString());
+  }
 
   const response = await fetchApi('/upload-data', {
     method: 'POST',
@@ -24,6 +28,9 @@ const uploadFile = async (params: UploadFileParams): Promise<any> => {
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
     if (errorData && errorData.detail) {
+      if (typeof errorData.detail === 'string') {
+        throw new Error(errorData.detail);
+      }
       throw errorData.detail;
     }
     throw new Error(`Upload failed with status ${response.status}`);

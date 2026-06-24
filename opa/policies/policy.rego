@@ -2,94 +2,95 @@ package data_management
 
 import rego.v1
 
-# Die Tabelle als statisches Daten-Mapping (Knowledge Base)
+# Definition der Kategorien mit ihren Eigenschaften und Aufbewahrungsfristen (in Tagen)
 data_categories := {
     "raw_primary": {
         "priority": "High",
+        "retention_days": 3650, # 10 Jahre
+        "object_lock": true,
         "implications": ["fixity_checks", "local_redundancy", "version_retention", "replication_before_deletion"]
     },
     "curated_master": {
         "priority": "Very high",
+        "retention_days": 36500, # 100 Jahre (Archiv-Standard)
+        "object_lock": true,
         "implications": ["highest_durability", "provenance", "geographic_redundancy", "periodic_integrity_checks"]
     },
     "metadata_manifests": {
         "priority": "Critical",
+        "retention_days": 30, # 30 Tage für Manifeste
+        "object_lock": true,
         "implications": ["immediate_replication", "versioning", "tamper_protection", "independent_preservation"]
     },
     "derived_access": {
         "priority": "Low to medium",
+        "retention_days": 0, # Keine feste Aufbewahrung
+        "object_lock": false,
         "implications": ["lower_cost_storage"]
     },
     "sensitive_restricted": {
         "priority": "Policy-dependent",
+        "retention_days": 1825, # 5 Jahre
+        "object_lock": true,
         "implications": ["encryption", "jurisdiction_aware_placement", "strict_access_control", "audit_logging"]
     },
     "operational_audit": {
         "priority": "High",
+        "retention_days": 2555, # 7 Jahre
+        "object_lock": true,
         "implications": ["retention_policies", "tamper_evident_logging", "replication_trusted_domains"]
     }
 }
 
-# Basis-Regeln zum Abfragen von Werten
-# Gibt die Priorität der im Input übergebenen Kategorie zurück
-get_priority := data_categories[input.category].priority
+# --- Autorisierungs-Logik ---
 
-# Gibt die benötigten Richtlinien (Implications) zurück
-get_required_policies := data_categories[input.category].implications
+# Liste der Rollen, die zum Upload berechtigt sind
+authorized_upload_roles := ["admin", "curator"]
 
-# Hilfsfunktion, um auf input.applied_policies sicher zuzugreifen (vermeidet Fehler, wenn nicht gesetzt)
-applied_policies := input.applied_policies if {
-    "applied_policies" in object.keys(input)
-} else := []
-
-# Compliance-Regel (Zulassungsprüfung)
-# Standardmäßig wird eine Speicheranfrage abgelehnt
+# Compliance-Regel
 default allow := false
 
-# Eine Anfrage wird nur erlaubt, wenn die vom System angewendeten Policies 
-# (input.applied_policies) alle für die Kategorie geforderten Policies abdecken.
+# Erlauben wenn:
+# 1. Keine Policy-Verstöße vorliegen
+# 2. Der User eine berechtigte Rolle hat
 allow if {
-    # Die Anfrage ist gültig, wenn es keine Verstöße (violations) gibt.
     count(violations) == 0
+    input.role in authorized_upload_roles
 }
 
-# Detaillierte Validierung und Warnungen (Violations)
-# Sammelt alle fehlenden Policies als Fehlermeldungen in einem Set
+# Detaillierte Validierung der erforderlichen Policies
 violations contains msg if {
     some required in data_categories[input.category].implications
-    not required in applied_policies
+    not required in input.applied_policies
     msg := sprintf("Kategorie '%v' erfordert die Policy '%v', aber sie fehlt.", [input.category, required])
 }
 
-# Spezifische Deny-Regeln (Beispiele für feingranulare Checks)
-
-# Schlägt an, wenn "sensitive_restricted" Daten ohne Verschlüsselung verarbeitet werden
-deny_unencrypted_sensitive_data if {
-    input.category == "sensitive_restricted"
-    not "encryption" in applied_policies
+# Fehlermeldung bei fehlender Berechtigung
+violations contains msg if {
+    not input.role in authorized_upload_roles
+    msg := sprintf("User mit der Rolle '%v' ist nicht zum Upload berechtigt.", [input.role])
 }
 
-# Schlägt an, wenn für "curated_master" keine geografische Redundanz vorliegt
-deny_missing_geo_redundancy if {
-    input.category == "curated_master"
-    not "geographic_redundancy" in applied_policies
+# --- Routing & Retention Logik ---
+
+# Bestimmung der Zielzonen
+default target_zones := ["ägypten"]
+
+target_zones := ["ägypten", "irak"] if {
+    input.category == "raw_primary"
 }
 
-# Schlägt an, wenn für "metadata_manifests" kein Manipulationssicherung existiert
-deny_missing_tamper_protection if {
-    input.category == "metadata_manifests"
-    not "tamper_protection" in applied_policies
-}
-
-# --- Routing Logik zwischen Zonen (Ägypten / Irak) ---
-default target_zone := "ägypten"
-
-# Wenn die Daten sensibel sind, in die Irak Zone (Irak) routen
-target_zone := "irak" if {
+target_zones := ["irak"] if {
     input.category == "sensitive_restricted"
 }
 
-# Wenn der Autor spezifisch für Irak ist, ebenfalls in die Irak Zone routen
-target_zone := "irak" if {
+target_zones := ["irak"] if {
     input.author == "Ali"
 }
+
+# Extraktion der Aufbewahrungsregeln für das Backend
+retention_days := data_categories[input.category].retention_days
+use_object_lock := data_categories[input.category].object_lock
+
+# Abwärtskompatibilität
+target_zone := target_zones[0]

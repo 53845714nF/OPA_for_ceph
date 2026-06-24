@@ -1,6 +1,8 @@
-# Souveränitätsbewusste, richtlinienbasierte Speicherverteilung für das digitale kulturelle Erbe
+# OPA for Ceph
 
-Datensouveränität im digitalen kulturellen Erbe: Ein Policy-basierter Ansatz zur Speicherverteilung
+## Beschreibung
+
+Dieses Projekt demonstriert die Integration von Open Policy Agent (OPA) in Ceph zur Durchsetzung datensouveränitätsbasierter Speicherrichtlinien.
 
 ## Ziel
 

@@ -22,7 +22,7 @@ export function Upload() {
     setFiles((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
 
-  const handleCommit = async (accessionId: string) => {
+  const handleCommit = async (accessionId: string, retentionDays: number) => {
     try {
       const results = [];
       for (const item of files) {
@@ -31,6 +31,7 @@ export function Upload() {
           file: item.file,
           author: username || 'Unknown',
           accessionIdentifier: accessionId,
+          retentionDays,
         });
         results.push(result);
       }
@@ -68,6 +69,7 @@ export function Upload() {
         <div className="lg:col-span-1">
           <AccessionManifestForm
             fileCount={files.length}
+            selectedCategory={uploadCategory}
             onSubmit={handleCommit}
             isUploading={uploadMutation.isPending}
           />
