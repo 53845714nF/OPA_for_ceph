@@ -24,11 +24,16 @@ sudo /snap/bin/microceph.radosgw-admin zonegroup create --rgw-zonegroup=world --
 sudo /snap/bin/microceph.radosgw-admin zone create --rgw-zonegroup=world --rgw-zone=ägypten --master --default --endpoints=http://localhost:80
 sudo /snap/bin/microceph.radosgw-admin zone create --rgw-zonegroup=world --rgw-zone=irak --endpoints=http://localhost:8001
 
+echo "=== Erstelle S3 Test-User als System-User ==="
+sudo /snap/bin/microceph.radosgw-admin user create --uid=testuser --display-name="Test User" --access-key=test --secret-key=test --system
+
+echo "=== Konfiguriere Credentials für Multisite-Replikation ==="
+sudo /snap/bin/microceph.radosgw-admin zonegroup modify --rgw-zonegroup=world --access-key=test --secret-key=test
+sudo /snap/bin/microceph.radosgw-admin zone modify --rgw-zonegroup=world --rgw-zone=ägypten --access-key=test --secret-key=test
+sudo /snap/bin/microceph.radosgw-admin zone modify --rgw-zonegroup=world --rgw-zone=irak --access-key=test --secret-key=test
+
 echo "=== Speichere Änderungen (Period Update) ==="
 sudo /snap/bin/microceph.radosgw-admin period update --commit
-
-echo "=== Erstelle S3 Test-User ==="
-sudo /snap/bin/microceph.radosgw-admin user create --uid=testuser --display-name="Test User" --access-key=test --secret-key=test
 
 echo "=== Berechtige und starte zweite RGW-Instanz (Zone: Irak) ==="
 sudo /snap/bin/microceph.ceph auth get-or-create client.rgw.irak osd 'allow rwx' mon 'allow rw' -o /tmp/client.rgw.irak.keyring
