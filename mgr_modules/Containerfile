@@ -1,0 +1,5 @@
+FROM quay.io/ceph/ceph:v18
+
+COPY decision_notifier /usr/share/ceph/mgr/decision_notifier/
+
+RUN chown -R ceph:ceph /usr/share/ceph/mgr/decision_notifier
