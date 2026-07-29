@@ -4,17 +4,31 @@ import urllib.error
 
 # Ceph MgrModule base class is provided internally by Ceph Manager
 try:
-    from mgr_module import MgrModule
+    from mgr_module import MgrModule, NotifyType
 except ImportError:
     # Dummy mock for local development/syntax checking when not running inside Ceph
     class MgrModule:
         def __init__(self, *args, **kwargs):
             self.log = type('LogMock', (object,), {'info': print, 'error': print})()
+    
+    class NotifyType:
+        osd_map = "osd_map"
+        mon_map = "mon_map"
+        pg_summary = "pg_summary"
+        health = "health"
             
 class Module(MgrModule):
     """
     Ceph Manager module to notify the decision_service about cluster events.
     """
+    
+    # Required by newer Ceph versions to register for events
+    NOTIFY_TYPES = [
+        NotifyType.osd_map,
+        NotifyType.mon_map,
+        NotifyType.pg_summary,
+        NotifyType.health
+    ]
     
     # These map Ceph notify_types to internal module flags
     COMMANDS = [
