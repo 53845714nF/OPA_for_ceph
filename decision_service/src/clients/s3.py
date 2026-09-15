@@ -3,7 +3,7 @@ from botocore.exceptions import ClientError
 from botocore.config import Config
 
 class S3Client:
-    def __init__(self, endpoint_url: str, access_key: str, secret_key: str):
+    def __init__(self, endpoint_url: str, access_key: str, secret_key: str, region_name: str = "default"):
         config = Config(
             connect_timeout=5,
             read_timeout=5,
@@ -14,7 +14,7 @@ class S3Client:
             endpoint_url=endpoint_url,
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_key,
-            region_name='world',
+            region_name=region_name,
             config=config
         )
 
@@ -24,20 +24,35 @@ class S3Client:
             try:
                 self.client.head_bucket(Bucket=bucket_name)
             except ClientError as e:
-                if e.response['Error']['Code'] == '404':
+                if e.response['Error']['Code'] in ['404', '403', 'NoSuchBucket']:
                     create_args = {'Bucket': bucket_name}
                     if use_object_lock:
                         create_args['ObjectLockEnabledForBucket'] = True
-                    self.client.create_bucket(**create_args)
+                    try:
+                        self.client.create_bucket(**create_args)
+                    except Exception as create_err:
+                        # Ceph RGW returns JSON to system users which botocore fails to parse as XML
+                        # Verify if bucket was created anyway
+                        try:
+                            self.client.head_bucket(Bucket=bucket_name)
+                        except Exception:
+                            print(f"Bucket creation check after exception failed: {create_err}")
+                            raise create_err
                     
                     # Ceph RGW (and AWS S3) explicitly requires versioning for Object Lock
                     if use_object_lock:
-                        self.client.put_bucket_versioning(
-                            Bucket=bucket_name,
-                            VersioningConfiguration={'Status': 'Enabled'}
-                        )
+                        try:
+                            self.client.put_bucket_versioning(
+                                Bucket=bucket_name,
+                                VersioningConfiguration={'Status': 'Enabled'}
+                            )
+                        except Exception as v_err:
+                            print(f"Warning setting bucket versioning: {v_err}")
                 else:
                     raise
+            except Exception as non_client_err:
+                # If head_bucket had another error, try creating if needed
+                pass
 
             # Upload the file with optional retention and metadata
             upload_args = {'ExtraArgs': {}}

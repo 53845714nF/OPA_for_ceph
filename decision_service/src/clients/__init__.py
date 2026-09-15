@@ -5,7 +5,8 @@ from config import (
     CEPH_PASSWORD, 
     S3_ACCESS_KEY, 
     S3_SECRET_KEY, 
-    S3_ZONES_CONFIG
+    S3_REGION,
+    S3_ZONES_CONFIG,
 )
 from .ceph import CephClient
 from .opa import OPAClient
@@ -16,6 +17,6 @@ opa_client = OPAClient(OPA_URL)
 
 # S3 Clients for all configured zones
 s3_clients = {
-    zone: S3Client(endpoint, S3_ACCESS_KEY, S3_SECRET_KEY)
+    zone: S3Client(endpoint, S3_ACCESS_KEY, S3_SECRET_KEY, region_name=S3_REGION)
     for zone, endpoint in S3_ZONES_CONFIG.items()
 }

@@ -9,8 +9,13 @@ router = APIRouter(tags=["provisioning"])
 def provision_ceph_pool(req: ProvisionRequest):
     print(f"Received provision request for tenant {req.tenant}, workload {req.workload}, pool {req.pool_name}")
     
-    decision = opa_client.get_decision(req.tenant, req.workload)
-    if decision.get("allow", False):
+    opa_raw = opa_client.get_decision(req.tenant, req.workload)
+    # Handle standard OPA API wrapped response {"result": {"decision": {...}, "allow": ...}}
+    result = opa_raw.get("result", {})
+    decision = result.get("decision", result) if isinstance(result, dict) else opa_raw
+    allow = decision.get("allow", False) or result.get("allow", False)
+
+    if allow:
         pool_type = decision.get("pool_type", "replicated")
     else:
         raise HTTPException(status_code=403, detail="Not allowed by OPA")
