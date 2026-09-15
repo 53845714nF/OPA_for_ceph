@@ -4,6 +4,12 @@ import rego.v1
 
 default allow := false
 
+# Allow provisioning if tenant and workload are provided
+allow if {
+    input.tenant != ""
+    input.workload != ""
+}
+
 # Default values if no specific match
 default pool_type := "replicated"
 default device_class := "hdd"
@@ -29,6 +35,7 @@ failure_domain := "rack" if {
 
 # Final Decision object returned to the FastAPI service
 decision := {
+    "allow": allow,
     "pool_type": pool_type,
     "device_class": device_class,
     "failure_domain": failure_domain,

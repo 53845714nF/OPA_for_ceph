@@ -71,21 +71,48 @@ violations contains msg if {
     msg := sprintf("User mit der Rolle '%v' ist nicht zum Upload berechtigt.", [input.role])
 }
 
-# --- Routing & Retention Logik ---
+# --- Routing & Retention Logik (Agnostisch für Ceph Multisite) ---
 
-# Bestimmung der Zielzonen
-default target_zones := ["ägypten"]
+# Replikations-Policy:
+# Erlaubt Replikation, wenn die Kategorie geografische Redundanz oder Replikation erfordert
+default allow_replication := false
 
-target_zones := ["ägypten", "irak"] if {
-    input.category == "raw_primary"
+allow_replication := true if {
+    "geographic_redundancy" in data_categories[input.category].implications
 }
 
-target_zones := ["irak"] if {
+allow_replication := true if {
+    "immediate_replication" in data_categories[input.category].implications
+}
+
+allow_replication := true if {
+    "replication_before_deletion" in data_categories[input.category].implications
+}
+
+# Bestimmung der primären Ingress-Zone (Datensouveränität)
+# Standardmäßig zone-a
+default primary_zone := "zone-a"
+
+# Sensible Daten oder standortspezifische Autoren
+primary_zone := "zone-b" if {
     input.category == "sensitive_restricted"
 }
 
-target_zones := ["irak"] if {
+primary_zone := "zone-b" if {
     input.author == "Ali"
+}
+
+# Bestimmung aller Zielzonen:
+# Bei erlaubter Replikation sind alle konfigurierten Zonen Ziele
+# Bei unterdrückter Replikation verbleibt das Datum exklusiv in der primary_zone
+default target_zones := ["zone-a"]
+
+target_zones := ["zone-a", "zone-b"] if {
+    allow_replication
+}
+
+target_zones := [primary_zone] if {
+    not allow_replication
 }
 
 # Extraktion der Aufbewahrungsregeln für das Backend
@@ -93,4 +120,4 @@ retention_days := data_categories[input.category].retention_days
 use_object_lock := data_categories[input.category].object_lock
 
 # Abwärtskompatibilität
-target_zone := target_zones[0]
+target_zone := primary_zone

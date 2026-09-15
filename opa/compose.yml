@@ -1,6 +1,6 @@
 services:
   opa:
-    image: openpolicyagent/opa:latest
+    image: docker.io/openpolicyagent/opa:latest
     container_name: ceph-opa
     ports:
       - "8181:8181"
