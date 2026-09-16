@@ -1,7 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// Wir nutzen standardmäßig localhost:8000 für das Python FastAPI Backend, es sei denn eine Env-Var ist gesetzt.
-export const API_BASE_URL = (typeof process !== 'undefined' ? process.env.BUN_PUBLIC_API_BASE_URL : undefined) || 'http://127.0.0.1:8000';
+// Dynamic API URL: Uses environment variable, or infers current host with port 8000, fallback to 127.0.0.1:8000
+export const API_BASE_URL = 
+  (typeof process !== 'undefined' && process.env?.BUN_PUBLIC_API_BASE_URL ? process.env.BUN_PUBLIC_API_BASE_URL : undefined) || 
+  (typeof window !== 'undefined' && window.location?.hostname
+    ? `${window.location.protocol}//${window.location.hostname}:8000`
+    : 'http://127.0.0.1:8000');
 
 interface AuthState {
   token: string | null;

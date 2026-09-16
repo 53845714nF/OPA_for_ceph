@@ -13,9 +13,12 @@ router = APIRouter(tags=["authentication"])
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT hashed_password, role FROM users WHERE username = ?", (form_data.username,))
-    user = cursor.fetchone()
-    conn.close()
+    try:
+        cursor.execute("SELECT hashed_password, role FROM users WHERE username = %s", (form_data.username,))
+        user = cursor.fetchone()
+    finally:
+        cursor.close()
+        conn.close()
 
     if not user or not verify_password(form_data.password, user[0]):
         raise HTTPException(
@@ -34,13 +37,15 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 def register(req: RegisterRequest):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE username = ?", (req.username,))
-    if cursor.fetchone():
+    try:
+        cursor.execute("SELECT id FROM users WHERE username = %s", (req.username,))
+        if cursor.fetchone():
+            raise HTTPException(status_code=400, detail="Username already registered")
+        
+        hashed_pw = get_password_hash(req.password)
+        cursor.execute("INSERT INTO users (username, hashed_password, role) VALUES (%s, %s, %s)", (req.username, hashed_pw, req.role))
+        conn.commit()
+    finally:
+        cursor.close()
         conn.close()
-        raise HTTPException(status_code=400, detail="Username already registered")
-    
-    hashed_pw = get_password_hash(req.password)
-    cursor.execute("INSERT INTO users (username, hashed_password, role) VALUES (?, ?, ?)", (req.username, hashed_pw, req.role))
-    conn.commit()
-    conn.close()
     return {"status": "success", "message": f"User {req.username} registered successfully"}

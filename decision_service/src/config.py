@@ -6,6 +6,14 @@ CEPH_API_URL = getenv("CEPH_API_URL", "https://192.168.178.166:8443/api")
 CEPH_USERNAME = getenv("CEPH_USERNAME", "admin")
 CEPH_PASSWORD = getenv("CEPH_PASSWORD", "password")
 
+# Database Configuration (PostgreSQL)
+DATABASE_URL = getenv("DATABASE_URL")
+POSTGRES_HOST = getenv("POSTGRES_HOST", "localhost")
+POSTGRES_PORT = getenv("POSTGRES_PORT", "5432")
+POSTGRES_DB = getenv("POSTGRES_DB", "decision_service")
+POSTGRES_USER = getenv("POSTGRES_USER", "postgres")
+POSTGRES_PASSWORD = getenv("POSTGRES_PASSWORD", "postgres")
+
 # S3 Configuration
 S3_ACCESS_KEY = getenv("S3_ACCESS_KEY", "test")
 S3_SECRET_KEY = getenv("S3_SECRET_KEY", "test")

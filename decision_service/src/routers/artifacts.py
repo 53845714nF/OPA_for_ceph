@@ -1,5 +1,4 @@
 import re
-import sqlite3
 from io import BytesIO
 from fastapi import APIRouter, HTTPException, Depends, status, File, UploadFile, Form
 
@@ -47,9 +46,12 @@ def get_number_of_artifacts():
 def get_number_of_curators():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM users WHERE role IN ('curator')")
-    count = cursor.fetchone()[0]
-    conn.close()
+    try:
+        cursor.execute("SELECT COUNT(*) FROM users WHERE role IN ('curator')")
+        count = cursor.fetchone()[0]
+    finally:
+        cursor.close()
+        conn.close()
     return count
 
 @router.get("/storage_size")
