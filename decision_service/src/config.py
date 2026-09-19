@@ -26,8 +26,8 @@ S3_ZONES_CONFIG = {
 
 # Human-readable labels for the UI/Dashboard
 ZONE_LABELS = {
-    "zone-a": getenv("ZONE_A_LABEL", "Standort A (192.168.178.166)"),
-    "zone-b": getenv("ZONE_B_LABEL", "Standort B (192.168.178.170)"),
+    "zone-a": getenv("ZONE_A_LABEL", "Kairo"),
+    "zone-b": getenv("ZONE_B_LABEL", "Erbil"),
 }
 
 # Geolocation coordinates and points for map visualization
