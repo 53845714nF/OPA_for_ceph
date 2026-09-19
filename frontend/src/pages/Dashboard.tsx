@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useDashboardStats } from "../hooks/useDashboardStats";
+import { StorageMap } from "../components/Dashboard/StorageMap";
 
 export function Dashboard() {
   const { data: stats, isLoading, isError } = useDashboardStats();
@@ -8,7 +9,6 @@ export function Dashboard() {
     <div className="flex-1 overflow-y-auto pt-8 px-margin-mobile md:px-margin-desktop pb-section-gap">
       <div className="max-w-container-max mx-auto space-y-section-gap">
         <section>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
             {/* Widget 1 */}
             <div className="bg-surface-container-low border border-outline-variant p-6 ambient-shadow">
@@ -31,7 +31,7 @@ export function Dashboard() {
               <h3 className="font-ebGaramond text-headline-lg text-on-surface">
                 {isLoading ? "..." : (isError ? "Error" : (stats?.totalUploadsSize || "0 B"))}
               </h3>
-              <p className="font-hankenGrotesk text-label-md text-on-surface-variant mt-1">Digital Preservation Storage</p>
+              <p className="font-hankenGrotesk text-label-md text-on-surface-variant mt-1">Preservation Storage</p>
             </div>
 
             {/* Widget 3 */}
@@ -43,9 +43,20 @@ export function Dashboard() {
               <h3 className="font-ebGaramond text-headline-lg text-on-surface">
                 {isLoading ? "..." : (isError ? "Error" : (stats?.activeCurators || 0))}
               </h3>
-              <p className="font-hankenGrotesk text-label-md text-on-surface-variant mt-1">Curators Online</p>
+              <p className="font-hankenGrotesk text-label-md text-on-surface-variant mt-1">Number of User</p>
             </div>
           </div>
+        </section>
+
+        {/* Map Section */}
+        <section>
+          {isLoading ? (
+            <div className="bg-surface-container-low border border-outline-variant p-12 text-center text-on-surface-variant">
+              Lade Standorte...
+            </div>
+          ) : (
+            <StorageMap locations={stats?.locations || []} />
+          )}
         </section>
       </div>
     </div>

@@ -30,6 +30,23 @@ ZONE_LABELS = {
     "zone-b": getenv("ZONE_B_LABEL", "Standort B (192.168.178.170)"),
 }
 
+# Geolocation coordinates and points for map visualization
+ZONE_LOCATION = {
+    "zone-a": {
+        "city": getenv("ZONE_A_CITY", "Kairo"),
+        "label": ZONE_LABELS.get("zone-a", "Standort A"),
+        "lat": float(getenv("ZONE_A_LAT", "29.955632")),
+        "lon": float(getenv("ZONE_A_LON", "31.272325")),
+    },
+    "zone-b": {
+        "city": getenv("ZONE_B_CITY", "Erbil"),
+        "label": ZONE_LABELS.get("zone-b", "Standort B"),
+        "lat": float(getenv("ZONE_B_LAT", "36.1888156792475")),
+        "lon": float(getenv("ZONE_B_LON", "43.96363390226423")),
+    },
+}
+ZONE_LOCATIONS = ZONE_LOCATION  # Alias for plural usage
+
 # Mapping of categories from frontend UI values to OPA-specific categories
 CATEGORY_MAPPING = {
     # German categories from the frontend UI

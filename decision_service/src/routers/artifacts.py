@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends, status, File, UploadFile,
 from schemas.artifacts import DataManagementRequest
 from auth import get_current_user
 from database import get_db_connection
-from config import CATEGORY_MAPPING, S3_ZONES_CONFIG, ZONE_LABELS
+from config import CATEGORY_MAPPING, S3_ZONES_CONFIG, ZONE_LABELS, ZONE_LOCATION
 from clients import s3_clients, opa_client, ceph_client
 
 router = APIRouter(tags=["artifacts"])
@@ -38,16 +38,21 @@ def validate_data(req: DataManagementRequest, current_user: dict = Depends(get_c
 
 @router.get("/number_of_artifacts")
 def get_number_of_artifacts():
-    # Only iterate canonical zones in S3_ZONES_CONFIG to avoid duplicate counts from aliases
-    current_count = sum(s3_clients[zone].get_object_count() for zone in S3_ZONES_CONFIG.keys() if zone in s3_clients)
-    return current_count
+    # Only count unique artifacts (bucket, key) across canonical zones to avoid duplicates from multisite replication
+    unique_artifacts = set()
+    for zone in S3_ZONES_CONFIG:
+        client = s3_clients.get(zone)
+        if client:
+            unique_artifacts.update(client.get_object_keys())
+    return len(unique_artifacts)
 
-@router.get("/number_of_curators")
-def get_number_of_curators():
+@router.get("/number_of_users")
+@router.get("/number_of_users")
+def get_number_of_users():
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT COUNT(*) FROM users WHERE role IN ('curator')")
+        cursor.execute("SELECT COUNT(*) FROM users")
         count = cursor.fetchone()[0]
     finally:
         cursor.close()
@@ -60,7 +65,18 @@ def get_storage_size():
 
 @router.get("/storage_location")
 def get_storage_location():
-    return [{"city": ZONE_LABELS.get(zone, zone.capitalize())} for zone in S3_ZONES_CONFIG.keys()]
+    locations = []
+    for zone in S3_ZONES_CONFIG:
+        label = ZONE_LABELS.get(zone, zone.capitalize())
+        loc_data = ZONE_LOCATION.get(zone, {})
+        locations.append({
+            "zone": zone,
+            "city": loc_data.get("city", label),
+            "label": label,
+            "lat": loc_data.get("lat", 0.0),
+            "lon": loc_data.get("lon", 0.0),
+        })
+    return locations
 
 @router.get("/search")
 def search_artifacts(query: str = ""):

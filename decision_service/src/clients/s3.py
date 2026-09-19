@@ -74,6 +74,21 @@ class S3Client:
             print(f"S3 Upload Error: {e}")
             raise e
 
+    def get_object_keys(self):
+        """Gibt ein Set von (bucket, key) aller Objekte dieser Zone zurück."""
+        keys = set()
+        try:
+            buckets = self.client.list_buckets().get('Buckets', [])
+            for bucket in buckets:
+                name = bucket['Name']
+                paginator = self.client.get_paginator('list_objects_v2')
+                for page in paginator.paginate(Bucket=name):
+                    for obj in page.get('Contents', []):
+                        keys.add((name, obj['Key']))
+        except Exception as e:
+            print(f"S3 Keys Error: {e}")
+        return keys
+
     def get_object_count(self):
         try:
             buckets = self.client.list_buckets().get('Buckets', [])
