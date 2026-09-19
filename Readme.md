@@ -8,7 +8,7 @@
     <img src="https://github.com/53845714nF/OPA_for_ceph/actions/workflows/decision-service.yml/badge.svg" alt="Container image badge" style="margin-left: 0.2em;">
 </p>
 
-<p align="center">Integration des Open Policy Agents (OPA) in ein Ceph-Multisite-Setup zur dynamischen Durchsetzung
+<p align="center">Integration des <a href="https://github.com/open-policy-agent/OPA">Open Policy Agents (OPA)</a> in ein <a href="https://github.com/ceph/ceph">Ceph</a>-Multisite-Setup zur dynamischen Durchsetzung
   datensouveräner Speicher- und Replikationsrichtlinien für digitales Kulturerbe.</p>
 
 <img align="center" src="images/screenshot_01.png" />
