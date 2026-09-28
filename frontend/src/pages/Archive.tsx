@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useArtifactSearch, Artifact } from "../hooks/useArtifactSearch";
 
 export function Archive() {
+  const { t, i18n } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeQuery, setActiveQuery] = useState("");
   
@@ -46,44 +48,64 @@ export function Archive() {
       {/* Search Hero Section */}
       <section className="px-margin-mobile md:px-margin-desktop py-12 border-b border-outline-variant bg-surface-container-lowest">
         <div className="max-w-4xl mx-auto">
-          <h2 className="font-ebGaramond text-display-lg text-primary mb-6 text-center">Search the Archives</h2>
+          <h2 className="font-ebGaramond text-display-lg text-primary mb-6 text-center">
+            {t("archive.searchTitle")}
+          </h2>
           <form onSubmit={handleSearch} className="relative flex items-center w-full">
             <span className="material-symbols-outlined absolute left-4 text-outline z-10">search</span>
             <input 
               type="text" 
-              placeholder="Search manuscripts, artifacts, or eras..." 
+              placeholder={t("archive.searchPlaceholder")} 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-16 py-4 bg-transparent border-0 border-b-2 border-outline focus:border-primary focus:ring-0 font-hankenGrotesk text-body-lg text-on-surface placeholder:text-outline-variant transition-colors rounded-none"
             />
             <button type="submit" className="absolute right-0 top-1/2 -translate-y-1/2 text-primary font-hankenGrotesk text-label-md uppercase hover:bg-surface-container p-2 transition-colors">
-              Search
+              {t("archive.searchButton")}
             </button>
           </form>
           <div className="flex flex-wrap gap-3 mt-6 justify-center">
-            <span className="font-hankenGrotesk text-data-mono text-outline uppercase flex items-center mt-1">Suggested:</span>
-            <button onClick={() => { setSearchQuery("raw"); setActiveQuery("raw"); }} className="font-hankenGrotesk text-data-mono text-on-surface-variant bg-surface-container px-3 py-1 hover:bg-outline-variant hover:text-on-primary transition-colors">Raw Data</button>
+            <span className="font-hankenGrotesk text-data-mono text-outline uppercase flex items-center mt-1">
+              {t("archive.suggested")}
+            </span>
+            <button onClick={() => { setSearchQuery("raw"); setActiveQuery("raw"); }} className="font-hankenGrotesk text-data-mono text-on-surface-variant bg-surface-container px-3 py-1 hover:bg-outline-variant hover:text-on-primary transition-colors">
+              {t("archive.rawData")}
+            </button>
             <span className="text-outline-variant text-[10px] mt-1">◆</span>
-            <button onClick={() => { setSearchQuery("manifest"); setActiveQuery("manifest"); }} className="font-hankenGrotesk text-data-mono text-on-surface-variant bg-surface-container px-3 py-1 hover:bg-outline-variant hover:text-on-primary transition-colors">Manifests</button>
+            <button onClick={() => { setSearchQuery("manifest"); setActiveQuery("manifest"); }} className="font-hankenGrotesk text-data-mono text-on-surface-variant bg-surface-container px-3 py-1 hover:bg-outline-variant hover:text-on-primary transition-colors">
+              {t("archive.manifests")}
+            </button>
             <span className="text-outline-variant text-[10px] mt-1">◆</span>
-            <button onClick={() => { setSearchQuery(".png"); setActiveQuery(".png"); }} className="font-hankenGrotesk text-data-mono text-on-surface-variant bg-surface-container px-3 py-1 hover:bg-outline-variant hover:text-on-primary transition-colors">Images</button>
+            <button onClick={() => { setSearchQuery(".png"); setActiveQuery(".png"); }} className="font-hankenGrotesk text-data-mono text-on-surface-variant bg-surface-container px-3 py-1 hover:bg-outline-variant hover:text-on-primary transition-colors">
+              {t("archive.images")}
+            </button>
           </div>
         </div>
       </section>
 
       {/* Main Layout: Sidebar + Grid */}
       <div className="flex-1 flex flex-col md:flex-row w-full max-w-container-max mx-auto">
-        {/* Filter Sidebar (Simplified for now) */}
+        {/* Filter Sidebar */}
         <aside className="w-full md:w-72 flex-shrink-0 border-b md:border-b-0 md:border-r border-outline-variant p-margin-mobile md:p-8 bg-surface-container-lowest">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-hankenGrotesk text-label-md uppercase text-on-surface tracking-wider">Refine Results</h3>
-            <button onClick={() => { setSearchQuery(""); setActiveQuery(""); }} className="text-outline hover:text-primary transition-colors font-hankenGrotesk text-data-mono">Clear All</button>
+            <h3 className="font-hankenGrotesk text-label-md uppercase text-on-surface tracking-wider">
+              {t("archive.refineResults")}
+            </h3>
+            <button onClick={() => { setSearchQuery(""); setActiveQuery(""); }} className="text-outline hover:text-primary transition-colors font-hankenGrotesk text-data-mono">
+              {t("common.clearAll")}
+            </button>
           </div>
 
           <div className="mb-8">
-            <h4 className="font-ebGaramond text-headline-md text-primary mb-4 border-b border-outline-variant/50 pb-2">Status</h4>
+            <h4 className="font-ebGaramond text-headline-md text-primary mb-4 border-b border-outline-variant/50 pb-2">
+              {t("archive.status")}
+            </h4>
             <div className="p-4 bg-surface-container-low border border-outline-variant text-sm font-hankenGrotesk text-on-surface-variant">
-              {isLoading ? "Searching S3 zones..." : isError ? "Error fetching results" : `Found ${groupedArtifacts.length} unique items`}
+              {isLoading 
+                ? t("archive.searchingZones") 
+                : isError 
+                  ? t("archive.errorFetching") 
+                  : t("archive.foundItems_other", { count: groupedArtifacts.length })}
             </div>
           </div>
         </aside>
@@ -94,9 +116,13 @@ export function Archive() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <p className="font-hankenGrotesk text-body-md text-on-surface-variant">
               {activeQuery ? (
-                <>Showing <strong className="text-on-surface font-semibold">{groupedArtifacts.length}</strong> artifacts for "{activeQuery}"</>
+                <>
+                  {t("archive.showingResults", { count: groupedArtifacts.length, query: activeQuery })}
+                </>
               ) : (
-                <>Browse all <strong className="text-on-surface font-semibold">{groupedArtifacts.length}</strong> artifacts</>
+                <>
+                  {t("archive.browseAll", { count: groupedArtifacts.length })}
+                </>
               )}
             </p>
           </div>
@@ -112,13 +138,14 @@ export function Archive() {
                 <article key={index} className="archival-card group bg-surface-container-lowest border border-outline-variant flex flex-col relative overflow-hidden h-[450px]">
                   <div className="absolute top-2 right-2 z-10 flex flex-col gap-1 items-end">
                     {artifact.zones.map(zone => (
-                      <span key={zone} className="bg-surface-container-lowest/80 backdrop-blur-sm text-outline px-2 py-1 border border-outline-variant text-[10px] font-hankenGrotesk uppercase tracking-widest flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[12px]">location_on</span> {zone}
+                      <span key={zone} className="bg-surface-container-lowest/95 backdrop-blur-md text-on-surface font-medium px-2 py-1 border border-outline-variant shadow-sm text-[10px] font-hankenGrotesk uppercase tracking-widest flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px] text-primary">location_on</span> {zone}
                       </span>
                     ))}
                     {artifact.zones.length > 1 && (
-                      <span className="bg-primary/10 text-primary px-2 py-1 border border-primary/20 text-[9px] font-hankenGrotesk uppercase tracking-tighter">
-                        Replicated
+                      <span className="bg-primary text-on-primary font-semibold px-2 py-1 shadow-md border border-primary text-[10px] font-hankenGrotesk uppercase tracking-wider flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px]">sync</span>
+                        {t("archive.multiZone")}
                       </span>
                     )}
                   </div>
@@ -140,7 +167,9 @@ export function Archive() {
                   </div>
                   <div className="p-5 flex flex-col flex-1">
                     <div className="mb-2">
-                      <span className="font-hankenGrotesk text-[10px] uppercase tracking-widest text-outline">Accession ID</span>
+                      <span className="font-hankenGrotesk text-[10px] uppercase tracking-widest text-outline">
+                        {t("archive.accessionId")}
+                      </span>
                       <p className="font-data-mono text-xs text-primary font-bold">{artifact.accession_id}</p>
                     </div>
                     <h3 className="font-ebGaramond text-headline-sm text-on-surface mb-2 leading-tight group-hover:text-primary transition-colors truncate" title={artifact.key}>
@@ -150,8 +179,14 @@ export function Archive() {
                       Bucket: <code className="bg-surface-container px-1">{artifact.bucket}</code>
                     </p>
                     <div className="flex flex-col gap-1 border-t border-outline-variant/40 pt-3 mt-auto">
-                      <div className="flex justify-between items-center"><span className="font-hankenGrotesk text-data-mono text-outline text-[10px]">Size</span><span className="font-hankenGrotesk text-data-mono text-on-surface text-[10px]">{formatSize(artifact.size)}</span></div>
-                      <div className="flex justify-between items-center"><span className="font-hankenGrotesk text-data-mono text-outline text-[10px]">Modified</span><span className="font-hankenGrotesk text-data-mono text-on-surface text-[10px]">{new Date(artifact.last_modified).toLocaleDateString()}</span></div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-hankenGrotesk text-data-mono text-outline text-[10px]">Size</span>
+                        <span className="font-hankenGrotesk text-data-mono text-on-surface text-[10px]">{formatSize(artifact.size)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-hankenGrotesk text-data-mono text-outline text-[10px]">Modified</span>
+                        <span className="font-hankenGrotesk text-data-mono text-on-surface text-[10px]">{new Date(artifact.last_modified).toLocaleDateString(i18n.language)}</span>
+                      </div>
                     </div>
                   </div>
                 </article>
@@ -162,7 +197,12 @@ export function Archive() {
           {!isLoading && groupedArtifacts.length === 0 && (
             <div className="text-center py-20 border-2 border-dashed border-outline-variant">
               <span className="material-symbols-outlined text-display-lg text-outline-variant mb-4">search_off</span>
-              <p className="font-ebGaramond text-headline-md text-on-surface-variant">No artifacts found matching your search.</p>
+              <p className="font-ebGaramond text-headline-md text-on-surface-variant">
+                {t("archive.noResults")}
+              </p>
+              <p className="font-hankenGrotesk text-body-md text-outline mt-2">
+                {t("archive.noResultsDesc")}
+              </p>
             </div>
           )}
         </section>

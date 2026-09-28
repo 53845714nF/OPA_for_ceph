@@ -1,8 +1,9 @@
-import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useDashboardStats } from "../hooks/useDashboardStats";
 import { StorageMap } from "../components/Dashboard/StorageMap";
 
 export function Dashboard() {
+  const { t } = useTranslation();
   const { data: stats, isLoading, isError } = useDashboardStats();
 
   return (
@@ -14,36 +15,48 @@ export function Dashboard() {
             <div className="bg-surface-container-low border border-outline-variant p-6 ambient-shadow">
               <div className="flex justify-between items-start mb-4">
                 <span className="material-symbols-outlined text-primary text-3xl">museum</span>
-                <span className="font-hankenGrotesk text-data-mono text-on-surface-variant bg-surface-variant px-2 py-1">TOTAL</span>
+                <span className="font-hankenGrotesk text-data-mono text-on-surface-variant bg-surface-variant px-2 py-1">
+                  {t("dashboard.total")}
+                </span>
               </div>
               <h3 className="font-ebGaramond text-headline-lg text-on-surface">
-                {isLoading ? "..." : (isError ? "Error" : (stats?.totalArtifacts.toLocaleString() || "0"))}
+                {isLoading ? "..." : (isError ? t("common.error") : (stats?.totalArtifacts.toLocaleString() || "0"))}
               </h3>
-              <p className="font-hankenGrotesk text-label-md text-on-surface-variant mt-1">Cataloged Artifacts</p>
+              <p className="font-hankenGrotesk text-label-md text-on-surface-variant mt-1">
+                {t("dashboard.totalArtifacts")}
+              </p>
             </div>
 
             {/* Widget 2 */}
             <div className="bg-surface-container-low border border-outline-variant p-6 ambient-shadow">
               <div className="flex justify-between items-start mb-4">
                 <span className="material-symbols-outlined text-secondary text-3xl">database</span>
-                <span className="font-hankenGrotesk text-data-mono text-on-surface-variant bg-surface-variant px-2 py-1">USAGE</span>
+                <span className="font-hankenGrotesk text-data-mono text-on-surface-variant bg-surface-variant px-2 py-1">
+                  {t("dashboard.usage")}
+                </span>
               </div>
               <h3 className="font-ebGaramond text-headline-lg text-on-surface">
-                {isLoading ? "..." : (isError ? "Error" : (stats?.totalUploadsSize || "0 B"))}
+                {isLoading ? "..." : (isError ? t("common.error") : (stats?.totalUploadsSize || "0 B"))}
               </h3>
-              <p className="font-hankenGrotesk text-label-md text-on-surface-variant mt-1">Preservation Storage</p>
+              <p className="font-hankenGrotesk text-label-md text-on-surface-variant mt-1">
+                {t("dashboard.preservationStorage")}
+              </p>
             </div>
 
             {/* Widget 3 */}
             <div className="bg-surface-container-low border border-outline-variant p-6 ambient-shadow">
               <div className="flex justify-between items-start mb-4">
                 <span className="material-symbols-outlined text-tertiary text-3xl">groups</span>
-                <span className="font-hankenGrotesk text-data-mono text-on-surface-variant bg-surface-variant px-2 py-1">ACTIVE</span>
+                <span className="font-hankenGrotesk text-data-mono text-on-surface-variant bg-surface-variant px-2 py-1">
+                  {t("dashboard.active")}
+                </span>
               </div>
               <h3 className="font-ebGaramond text-headline-lg text-on-surface">
-                {isLoading ? "..." : (isError ? "Error" : (stats?.activeCurators || 0))}
+                {isLoading ? "..." : (isError ? t("common.error") : (stats?.activeCurators || 0))}
               </h3>
-              <p className="font-hankenGrotesk text-label-md text-on-surface-variant mt-1">Number of User</p>
+              <p className="font-hankenGrotesk text-label-md text-on-surface-variant mt-1">
+                {t("dashboard.numberOfUsers")}
+              </p>
             </div>
           </div>
         </section>
@@ -52,7 +65,7 @@ export function Dashboard() {
         <section>
           {isLoading ? (
             <div className="bg-surface-container-low border border-outline-variant p-12 text-center text-on-surface-variant">
-              Lade Standorte...
+              {t("dashboard.loadingLocations")}
             </div>
           ) : (
             <StorageMap locations={stats?.locations || []} />

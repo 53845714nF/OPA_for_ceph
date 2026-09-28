@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { CATEGORY_DETAILS } from './UploadConstants';
 
@@ -19,6 +20,7 @@ const generateAccessionId = () => {
 };
 
 export function AccessionManifestForm({ fileCount = 0, selectedCategory = '', onSubmit, isUploading = false }: AccessionManifestFormProps) {
+  const { t } = useTranslation();
   const { username } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [violations, setViolations] = useState<string[]>([]);
@@ -39,7 +41,7 @@ export function AccessionManifestForm({ fileCount = 0, selectedCategory = '', on
     <div className="bg-surface border border-outline-variant p-6 sticky top-24">
       <h3 className="font-headline-md text-headline-md text-on-background mb-6 flex items-center gap-2">
         <span className="material-symbols-outlined text-primary">summarize</span>
-        Accession Manifest
+        {t("manifest.title")}
       </h3>
 
       <form className="space-y-6">
@@ -63,13 +65,17 @@ export function AccessionManifestForm({ fileCount = 0, selectedCategory = '', on
           <div className="bg-green-100 border-l-4 border-green-600 p-4 rounded-md">
             <div className="flex items-center">
               <span className="material-symbols-outlined text-green-700 mr-3 text-sm">check_circle</span>
-              <p className="text-sm text-green-800 font-medium">Accession successfully committed!</p>
+              <p className="text-sm text-green-800 font-medium">
+                {t("manifest.success")}
+              </p>
             </div>
           </div>
         )}
 
         <div className="flex flex-col">
-          <label className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">Accession Identifier</label>
+          <label className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">
+            {t("manifest.accessionId")}
+          </label>
           <input
             type="text"
             value={accessionId}
@@ -79,7 +85,9 @@ export function AccessionManifestForm({ fileCount = 0, selectedCategory = '', on
         </div>
 
         <div className="flex flex-col">
-          <label className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">Retention Days</label>
+          <label className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">
+            {t("manifest.retentionDays")}
+          </label>
           <input
             type="number"
             min="0"
@@ -90,13 +98,14 @@ export function AccessionManifestForm({ fileCount = 0, selectedCategory = '', on
         </div>
 
         <div className="flex flex-col">
-          <label className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">Curator Name</label>
+          <label className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider text-[11px]">
+            {t("manifest.curatorName")}
+          </label>
           <div className="flex items-center gap-2 py-2">
             <span className="material-symbols-outlined text-[18px] text-primary">account_circle</span>
             <span className="font-body-md text-body-md text-on-background font-medium">{username || 'Unknown'}</span>
           </div>
         </div>
-
 
         <button
           type="button"
@@ -110,7 +119,7 @@ export function AccessionManifestForm({ fileCount = 0, selectedCategory = '', on
               return;
             }
             if (fileCount === 0) {
-              setError('Classification queue is empty. Please add files before committing.');
+              setError(t("manifest.noFilesError"));
               return;
             }
             if (onSubmit) {
@@ -141,10 +150,10 @@ export function AccessionManifestForm({ fileCount = 0, selectedCategory = '', on
           {isUploading ? (
             <span className="flex items-center justify-center">
               <span className="material-symbols-outlined animate-spin mr-2">progress_activity</span>
-              UPLOADING...
+              {t("manifest.committing")}
             </span>
           ) : (
-            'COMMIT ACCESSION'
+            t("manifest.commitButton")
           )}
         </button>
       </form>

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
 @theme {
   /* Colors */
   --color-on-tertiary-fixed-variant: #5a4323;
@@ -106,9 +108,74 @@
   --text-headline-lg--font-weight: 500;
 }
 
+:root {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"],
+html.dark {
+  color-scheme: dark;
+
+  /* Nocturnal Heritage Vault / Archival Dark Mode Palette */
+  --color-background: #141211;
+  --color-surface: #141211;
+  --color-surface-container-lowest: #0e0d0c;
+  --color-surface-container-low: #1c1918;
+  --color-surface-container: #23201e;
+  --color-surface-container-high: #2b2725;
+  --color-surface-container-highest: #36312e;
+  --color-surface-variant: #2d2826;
+  --color-surface-bright: #3c3633;
+  --color-surface-dim: #141211;
+
+  --color-on-background: #ede0dc;
+  --color-on-surface: #ede0dc;
+  --color-on-surface-variant: #c3b4af;
+  --color-outline: #8d7c75;
+  --color-outline-variant: #423834;
+
+  --color-primary: #ffb5a0;
+  --color-on-primary: #561f10;
+  --color-primary-container: #7d2c16;
+  --color-on-primary-container: #ffdbd1;
+  --color-primary-fixed: #ffdbd1;
+  --color-primary-fixed-dim: #ffb5a0;
+  --color-on-primary-fixed: #3b0900;
+  --color-on-primary-fixed-variant: #7b2e18;
+  --color-inverse-primary: #6e2510;
+  --color-surface-tint: #ffb5a0;
+
+  --color-secondary: #c4caa7;
+  --color-on-secondary: #2e331a;
+  --color-secondary-container: #44492e;
+  --color-on-secondary-container: #e0e6c1;
+  --color-secondary-fixed: #e0e6c1;
+  --color-secondary-fixed-dim: #c4caa7;
+  --color-on-secondary-fixed: #191e07;
+  --color-on-secondary-fixed-variant: #44492e;
+
+  --color-tertiary: #e3c197;
+  --color-on-tertiary: #422c0e;
+  --color-tertiary-container: #5c4120;
+  --color-on-tertiary-container: #ffddb4;
+  --color-tertiary-fixed: #ffddb4;
+  --color-tertiary-fixed-dim: #e3c197;
+  --color-on-tertiary-fixed: #291800;
+  --color-on-tertiary-fixed-variant: #5a4323;
+
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+
+  --color-inverse-surface: #ede0dc;
+  --color-inverse-on-surface: #313030;
+}
+
 @layer base {
   html, body {
     @apply bg-background text-on-background m-0 font-body-md min-h-screen w-full;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
@@ -156,6 +223,15 @@
     box-shadow: 0px 4px 20px rgba(0,0,0,0.04);
     transform: translateY(-2px);
     transition: all 0.2s ease-in-out;
+  }
+
+  .dark .ambient-shadow:hover,
+  .dark .archival-card:hover {
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.45);
+  }
+
+  .dark .archival-map-container .maplibregl-canvas {
+    filter: invert(90%) hue-rotate(180deg) contrast(90%) brightness(85%);
   }
   
   .archival-card {

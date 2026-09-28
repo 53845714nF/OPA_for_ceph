@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useLogin } from '../hooks/useAuthApi';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 export function Login() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -24,14 +28,20 @@ export function Login() {
           navigate(from, { replace: true });
         },
         onError: () => {
-          setError('Login failed. Please check your username and password.');
+          setError(t('auth.loginFailed'));
         }
       }
     );
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-container-low px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-surface-container-low px-4 sm:px-6 lg:px-8 relative">
+      {/* Top right language switcher & theme toggle */}
+      <div className="absolute top-6 right-6 flex items-center gap-2">
+        <ThemeToggle variant="buttons" />
+        <LanguageSwitcher variant="buttons" />
+      </div>
+
       <div className="max-w-md w-full space-y-8 bg-surface p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-outline-variant/30">
         <div>
           <div className="flex justify-center">
@@ -40,10 +50,10 @@ export function Login() {
             </div>
           </div>
           <h2 className="mt-6 text-center text-3xl font-display-lg text-on-background">
-            Welcome back
+            {t("auth.welcomeBack")}
           </h2>
           <p className="mt-2 text-center text-sm text-on-surface-variant font-body-md">
-            Sign in to access the decision service dashboard.
+            {t("auth.signInSubtitle")}
           </p>
         </div>
 
@@ -59,7 +69,9 @@ export function Login() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-label-md text-on-surface mb-1">Username</label>
+              <label className="block text-sm font-label-md text-on-surface mb-1">
+                {t("auth.username")}
+              </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <span className="material-symbols-outlined text-on-surface-variant text-sm">person</span>
@@ -76,7 +88,9 @@ export function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-label-md text-on-surface mb-1">Password</label>
+              <label className="block text-sm font-label-md text-on-surface mb-1">
+                {t("auth.password")}
+              </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <span className="material-symbols-outlined text-on-surface-variant text-sm">lock</span>
@@ -102,21 +116,19 @@ export function Login() {
               {loginMutation.isPending ? (
                 <span className="flex items-center">
                   <span className="material-symbols-outlined animate-spin mr-2">progress_activity</span>
-                  Signing in...
+                  {t("auth.signingIn")}
                 </span>
               ) : (
-                'Sign in'
+                t("auth.signIn")
               )}
             </button>
           </div>
 
-          <div className="text-center mt-4">
-            <p className="text-sm text-on-surface-variant">
-              Don't have an account?{' '}
-              <Link to="/register" className="font-medium text-primary hover:text-primary/80 transition-colors">
-                Register here
-              </Link>
-            </p>
+          <div className="text-center mt-4 space-y-1">
+            <p className="text-sm text-on-surface-variant">{t("auth.needAccount")}</p>
+            <Link to="/register" className="font-medium text-primary hover:text-primary/80 transition-colors text-sm">
+              Info
+            </Link>
           </div>
         </form>
       </div>

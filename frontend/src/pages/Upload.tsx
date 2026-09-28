@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CATEGORIES } from '../components/Upload/UploadConstants';
 import { UploadDropzone } from '../components/Upload/UploadDropzone';
 import { ClassificationQueue, type UploadFile } from '../components/Upload/ClassificationQueue';
@@ -7,6 +8,7 @@ import { useFileUpload } from '../hooks/useFileUpload';
 import { useAuth } from '../context/AuthContext';
 
 export function Upload() {
+  const { t } = useTranslation();
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [uploadCategory, setUploadCategory] = useState<string>(CATEGORIES[0] || '');
 
@@ -46,9 +48,11 @@ export function Upload() {
   return (
     <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12">
       <header className="mb-12">
-        <h2 className="font-display-lg text-display-lg text-on-background mb-4">Upload Accession</h2>
+        <h2 className="font-display-lg text-display-lg text-on-background mb-4">
+          {t("upload.title")}
+        </h2>
         <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
-          Securely classify and ingest digital artifacts into the institutional repository. Ensure all primary and metadata files comply with preservation standards.
+          {t("upload.subtitle")}
         </p>
       </header>
 

@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CATEGORIES } from './UploadConstants';
 
 interface UploadDropzoneProps {
@@ -8,6 +9,7 @@ interface UploadDropzoneProps {
 }
 
 export function UploadDropzone({ uploadCategory, setUploadCategory, onFilesSelected }: UploadDropzoneProps) {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSelectFilesClick = () => {
@@ -25,7 +27,7 @@ export function UploadDropzone({ uploadCategory, setUploadCategory, onFilesSelec
       {/* Upload Category Selection */}
       <div className="bg-surface-container border border-outline-variant p-4 flex flex-col gap-3">
         <label className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-[11px]">
-          Select Category for Upload
+          {t("upload.selectCategory")}
         </label>
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map(c => (
@@ -38,7 +40,7 @@ export function UploadDropzone({ uploadCategory, setUploadCategory, onFilesSelec
                 : 'bg-surface text-on-surface border-outline-variant hover:bg-surface-container-high'
                 }`}
             >
-              {c}
+              {t(`categories.${c}.name`, { defaultValue: c })}
             </button>
           ))}
         </div>
@@ -57,13 +59,17 @@ export function UploadDropzone({ uploadCategory, setUploadCategory, onFilesSelec
           onChange={handleFileChange}
         />
         <span className="material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-primary mb-4 transition-colors">upload_file</span>
-        <h3 className="font-headline-md text-headline-md text-on-background mb-2">Drag &amp; Drop Files Here</h3>
-        <p className="font-body-md text-body-md text-on-surface-variant mb-6">or click to browse institutional drives</p>
-        <button className="border border-outline text-on-surface px-6 py-2 font-label-md text-label-md uppercase tracking-wider hover:bg-surface-container-high transition-colors">Select Files</button>
+        <h3 className="font-headline-md text-headline-md text-on-background mb-2">
+          {t("upload.dragDrop")}
+        </h3>
+        <p className="font-body-md text-body-md text-on-surface-variant mb-6">
+          {t("upload.orBrowse")}
+        </p>
+        <button className="border border-outline text-on-surface px-6 py-2 font-label-md text-label-md uppercase tracking-wider hover:bg-surface-container-high transition-colors">
+          {t("upload.selectFiles")}
+        </button>
         <div className="mt-6 font-data-mono text-data-mono text-on-surface-variant flex gap-4">
-          <span>Max size: 5GB per file</span>
-          <span>•</span>
-          <span>Supported: TIFF, PDF/A, XML, JSON</span>
+          <span>{t("upload.supportNotice")}</span>
         </div>
       </div>
     </>

@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Depends, status, File, UploadFile,
 
 from schemas.artifacts import DataManagementRequest
 from auth import get_current_user
-from database import get_db_connection
+from ldap_client import ldap_client
 from config import CATEGORY_MAPPING, S3_ZONES_CONFIG, ZONE_LABELS, ZONE_LOCATION
 from clients import s3_clients, opa_client, ceph_client
 
@@ -47,17 +47,8 @@ def get_number_of_artifacts():
     return len(unique_artifacts)
 
 @router.get("/number_of_users")
-@router.get("/number_of_users")
 def get_number_of_users():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT COUNT(*) FROM users")
-        count = cursor.fetchone()[0]
-    finally:
-        cursor.close()
-        conn.close()
-    return count
+    return ldap_client.get_user_count()
 
 @router.get("/storage_size")
 def get_storage_size():
@@ -130,7 +121,13 @@ async def upload_data(
             if not s3_client:
                 raise HTTPException(status_code=500, detail=f"Primary storage zone '{primary_zone}' is not configured.")
 
-            # In Ceph Multisite (Ansatz A): Upload to the primary zone
+            # 1. Ensure bucket exists in primary zone
+            s3_client.ensure_bucket_exists(bucket_name, use_object_lock=use_object_lock)
+
+            # 2. Ensure Ceph Multisite sync policy reflects the compliance replication decision
+            ceph_client.ensure_bucket_sync(bucket_name, enable_replication=allow_replication)
+
+            # 3. In Ceph Multisite (Ansatz A): Upload to the primary zone
             s3_client.upload_file(
                 BytesIO(file_content), 
                 bucket_name, 

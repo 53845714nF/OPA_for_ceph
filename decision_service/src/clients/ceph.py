@@ -1,5 +1,7 @@
 from requests import get, post
 from urllib3 import disable_warnings
+import paramiko
+from config import CEPH_SSH_USER, CEPH_SSH_PASSWORD, CEPH_MASTER_SSH_HOST, CEPH_SECONDARY_SSH_HOST
 
 disable_warnings()
 
@@ -13,6 +15,8 @@ class CephClient:
             "Content-Type": "application/json",
             "Accept": "application/vnd.ceph.api.v1.0+json",
         }
+        self._synced_buckets = set()
+        self._unreplicated_buckets = set()
 
     def login(self):
         try:
@@ -163,3 +167,86 @@ class CephClient:
         except Exception as e:
             print(f"Ceph list_buckets Error: {e}")
         return []
+
+    def _run_ssh_cmd(self, host: str, command: str) -> tuple[int, str, str]:
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            client.connect(
+                host,
+                username=CEPH_SSH_USER,
+                password=CEPH_SSH_PASSWORD,
+                timeout=5
+            )
+            stdin, stdout, stderr = client.exec_command(command)
+            out = stdout.read().decode("utf-8", errors="replace").strip()
+            err = stderr.read().decode("utf-8", errors="replace").strip()
+            exit_status = stdout.channel.recv_exit_status()
+            return exit_status, out, err
+        finally:
+            client.close()
+
+    def ensure_bucket_sync(self, bucket_name: str, enable_replication: bool = True) -> bool:
+        """
+        Ensures Ceph Multisite sync group and pipes are configured for this bucket.
+        - If enable_replication is True: verifies or enables 'sovereignty' sync group
+          with symmetrical replication across all zones.
+        - If enable_replication is False: ensures sync group is not enabled (sovereignty preserved).
+        """
+        if enable_replication and bucket_name in self._synced_buckets:
+            return True
+        if not enable_replication and bucket_name in self._unreplicated_buckets:
+            return True
+
+        try:
+            # Check current bucket sync status on master node
+            code, out, err = self._run_ssh_cmd(
+                CEPH_MASTER_SSH_HOST,
+                f"cephadm shell -- radosgw-admin sync group get --bucket={bucket_name}"
+            )
+
+            is_enabled = ('"status": "enabled"' in out) or ('"status":"enabled"' in out)
+
+            if enable_replication:
+                if not is_enabled:
+                    print(f"[CephClient] Enabling multisite sync for bucket '{bucket_name}'...")
+                    # 1. Create/enable sync group on bucket
+                    self._run_ssh_cmd(
+                        CEPH_MASTER_SSH_HOST,
+                        f"cephadm shell -- radosgw-admin sync group create --bucket={bucket_name} --group-id=sovereignty --status=enabled"
+                    )
+                    # 2. Attach symmetrical mirror pipe between all zones
+                    self._run_ssh_cmd(
+                        CEPH_MASTER_SSH_HOST,
+                        f"cephadm shell -- radosgw-admin sync group pipe create --bucket={bucket_name} --group-id=sovereignty --pipe-id=pipe-mirror --source-zones='*' --dest-zones='*'"
+                    )
+                    # 3. Trigger catch-up sync on secondary zone if available
+                    try:
+                        self._run_ssh_cmd(
+                            CEPH_SECONDARY_SSH_HOST,
+                            f"cephadm shell -- radosgw-admin bucket sync init --bucket={bucket_name} --source-zone=zone-a"
+                        )
+                        self._run_ssh_cmd(
+                            CEPH_SECONDARY_SSH_HOST,
+                            f"cephadm shell -- radosgw-admin bucket sync run --bucket={bucket_name} --source-zone=zone-a"
+                        )
+                    except Exception as sec_e:
+                        print(f"[CephClient] Secondary node catch-up warning: {sec_e}")
+
+                self._synced_buckets.add(bucket_name)
+                self._unreplicated_buckets.discard(bucket_name)
+                return True
+            else:
+                # Replication is prohibited (e.g. sensitive_restricted / local sovereign data)
+                if is_enabled:
+                    print(f"[CephClient] Disabling multisite sync for sovereign bucket '{bucket_name}'...")
+                    self._run_ssh_cmd(
+                        CEPH_MASTER_SSH_HOST,
+                        f"cephadm shell -- radosgw-admin sync group modify --bucket={bucket_name} --group-id=sovereignty --status=forbidden"
+                    )
+                self._unreplicated_buckets.add(bucket_name)
+                self._synced_buckets.discard(bucket_name)
+                return True
+        except Exception as e:
+            print(f"[CephClient] ensure_bucket_sync error for '{bucket_name}': {e}")
+            return False

@@ -18,41 +18,44 @@ class S3Client:
             config=config
         )
 
+    def ensure_bucket_exists(self, bucket_name: str, use_object_lock: bool = False):
+        try:
+            self.client.head_bucket(Bucket=bucket_name)
+            return True
+        except ClientError as e:
+            if e.response['Error']['Code'] in ['404', '403', 'NoSuchBucket']:
+                create_args = {'Bucket': bucket_name}
+                if use_object_lock:
+                    create_args['ObjectLockEnabledForBucket'] = True
+                try:
+                    self.client.create_bucket(**create_args)
+                except Exception as create_err:
+                    # Ceph RGW returns JSON to system users which botocore fails to parse as XML
+                    # Verify if bucket was created anyway
+                    try:
+                        self.client.head_bucket(Bucket=bucket_name)
+                    except Exception:
+                        print(f"Bucket creation check after exception failed: {create_err}")
+                        raise create_err
+                
+                # Ceph RGW (and AWS S3) explicitly requires versioning for Object Lock
+                if use_object_lock:
+                    try:
+                        self.client.put_bucket_versioning(
+                            Bucket=bucket_name,
+                            VersioningConfiguration={'Status': 'Enabled'}
+                        )
+                    except Exception as v_err:
+                        print(f"Warning setting bucket versioning: {v_err}")
+                return True
+            else:
+                raise
+        except Exception:
+            return True
+
     def upload_file(self, file_obj, bucket_name: str, object_name: str, use_object_lock: bool = False, retention_days: int = 0, metadata: dict = None):
         try:
-            # Ensure bucket exists
-            try:
-                self.client.head_bucket(Bucket=bucket_name)
-            except ClientError as e:
-                if e.response['Error']['Code'] in ['404', '403', 'NoSuchBucket']:
-                    create_args = {'Bucket': bucket_name}
-                    if use_object_lock:
-                        create_args['ObjectLockEnabledForBucket'] = True
-                    try:
-                        self.client.create_bucket(**create_args)
-                    except Exception as create_err:
-                        # Ceph RGW returns JSON to system users which botocore fails to parse as XML
-                        # Verify if bucket was created anyway
-                        try:
-                            self.client.head_bucket(Bucket=bucket_name)
-                        except Exception:
-                            print(f"Bucket creation check after exception failed: {create_err}")
-                            raise create_err
-                    
-                    # Ceph RGW (and AWS S3) explicitly requires versioning for Object Lock
-                    if use_object_lock:
-                        try:
-                            self.client.put_bucket_versioning(
-                                Bucket=bucket_name,
-                                VersioningConfiguration={'Status': 'Enabled'}
-                            )
-                        except Exception as v_err:
-                            print(f"Warning setting bucket versioning: {v_err}")
-                else:
-                    raise
-            except Exception as non_client_err:
-                # If head_bucket had another error, try creating if needed
-                pass
+            self.ensure_bucket_exists(bucket_name, use_object_lock=use_object_lock)
 
             # Upload the file with optional retention and metadata
             upload_args = {'ExtraArgs': {}}

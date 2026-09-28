@@ -28,7 +28,7 @@ Ergebnis: OPA ist „Policy Compiler“, Ceph ist „Execution Engine“
 
 ### Gesamtsystem mit Docker / Podman Compose starten
 
-Startet **PostgreSQL 18**, **OPA**, den **Decision Service** und baut das **Frontend**:
+Startet **Authentik (IAM & LDAP-Outpost)**, **OPA**, den **Decision Service** und baut das **Frontend**:
 
 ```bash
 docker compose up -d --build
@@ -40,7 +40,13 @@ Dienste:
 - **Frontend (UI):** [http://localhost:3000](http://localhost:3000)
 - **Decision Service (API):** [http://localhost:8000](http://localhost:8000) / [Docs](http://localhost:8000/docs)
 - **OPA:** [http://localhost:8181](http://localhost:8181)
-- **PostgreSQL 18:** `localhost:5432`
+- **Authentik (IAM Web Portal):** [http://localhost:9000](http://localhost:9000)
+- **Authentik LDAP-Outpost:** `localhost:3389` (LDAP; oder `389` via sysctl)
+
+Standard-Benutzer (über Authentik-Blueprint vorkonfiguriert):
+- `admin` / `admin` (Rolle: `admin`, volle Upload- und Policy-Rechte)
+- `curator` / `curator` (Rolle: `curator`, berechtigt für Uploads)
+- `user` / `user` (Rolle: `user`, Standard-Leserechte)
 
 ---
 
@@ -58,7 +64,7 @@ podman compose up -d
 ```bash
 cd decision_service
 source .venv/bin/activate
-# Nutzt PostgreSQL (z. B. via docker/podman compose)
+# Nutzt Authentik LDAP (z. B. via docker/podman compose)
 fastapi dev src/main.py
 ```
 

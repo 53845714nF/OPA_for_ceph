@@ -1,13 +1,18 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export function ArtifactDetail() {
+  const { t } = useTranslation();
+
   return (
     <div className="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-section-gap">
       {/* Task-Focused Header (Suppressed main nav for detail view) */}
       <header className="mb-8 flex justify-between items-center">
         <Link to="/archive" className="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors group cursor-pointer">
           <span className="material-symbols-outlined group-hover:-translate-x-1 transition-transform">arrow_back</span>
-          <span className="font-label-md text-label-md uppercase tracking-widest">Return to Archive</span>
+          <span className="font-label-md text-label-md uppercase tracking-widest">
+            {t("artifactDetail.returnToArchive")}
+          </span>
         </Link>
         <div className="flex items-center gap-4">
           <button aria-label="Print Document" className="w-10 h-10 flex items-center justify-center border border-outline text-on-surface hover:bg-surface-container-high transition-colors rounded-none">
@@ -18,7 +23,7 @@ export function ArtifactDetail() {
           </button>
           <button className="px-6 py-2 bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest hover:bg-primary/90 transition-colors rounded-none shadow-sm flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px]">download</span>
-            Request Access
+            {t("artifactDetail.requestAccess")}
           </button>
         </div>
       </header>
@@ -79,22 +84,32 @@ export function ArtifactDetail() {
 
         {/* Right: Metadata Ledger (4 cols) */}
         <div className="md:col-span-4 bg-surface border border-outline-variant rounded-none p-8 h-fit self-start sticky top-32">
-          <h2 className="font-headline-md text-headline-md text-primary mb-8 border-b-2 border-primary pb-4 inline-block">Curatorial Record</h2>
+          <h2 className="font-headline-md text-headline-md text-primary mb-8 border-b-2 border-primary pb-4 inline-block">
+            {t("artifactDetail.curatorialRecord")}
+          </h2>
           <div className="flex flex-col">
             <div className="py-4 border-b border-outline-variant flex flex-col gap-1 group hover:bg-surface-container-low transition-colors px-2 -mx-2">
-              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Original Author</span>
+              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">
+                {t("artifactDetail.originalAuthor")}
+              </span>
               <span className="font-body-md text-body-md text-on-surface">Ibn al-Haytham (Alhazen)</span>
             </div>
             <div className="py-4 border-b border-outline-variant flex flex-col gap-1 group hover:bg-surface-container-low transition-colors px-2 -mx-2">
-              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Date of Origin</span>
+              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">
+                {t("artifactDetail.dateOfOrigin")}
+              </span>
               <span className="font-body-md text-body-md text-on-surface">Circa 1011–1021 CE</span>
             </div>
             <div className="py-4 border-b border-outline-variant flex flex-col gap-1 group hover:bg-surface-container-low transition-colors px-2 -mx-2">
-              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Geographic Origin</span>
+              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">
+                {t("artifactDetail.geographicOrigin")}
+              </span>
               <span className="font-body-md text-body-md text-on-surface">Cairo, Fatimid Caliphate</span>
             </div>
             <div className="py-4 border-b border-outline-variant flex flex-col gap-1 group hover:bg-surface-container-low transition-colors px-2 -mx-2">
-              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Material Medium</span>
+              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">
+                {t("artifactDetail.materialMedium")}
+              </span>
               <span className="font-body-md text-body-md text-on-surface">Iron gall ink on vellum</span>
             </div>
             <div className="py-4 border-b border-outline-variant flex flex-col gap-1 group hover:bg-surface-container-low transition-colors px-2 -mx-2">

@@ -1,0 +1,111 @@
+version: 1
+metadata:
+  name: Ceph OPA LDAP Setup
+entries:
+  # 1. Groups / Roles for OPA
+  - model: authentik_core.group
+    identifiers:
+      name: admin
+    attrs:
+      name: admin
+      is_superuser: true
+      attributes:
+        description: "Administrator role with full upload and policy rights"
+
+  - model: authentik_core.group
+    identifiers:
+      name: curator
+    attrs:
+      name: curator
+      is_superuser: false
+      attributes:
+        description: "Curator role with upload authorization in OPA"
+
+  - model: authentik_core.group
+    identifiers:
+      name: user
+    attrs:
+      name: user
+      is_superuser: false
+      attributes:
+        description: "Standard user role without upload authorization"
+
+  # 2. Default Users
+  - model: authentik_core.user
+    identifiers:
+      username: admin
+    attrs:
+      username: admin
+      name: Admin
+      email: admin@example.com
+      password: admin
+      is_active: true
+      groups:
+        - !Find [authentik_core.group, [name, admin]]
+
+  - model: authentik_core.user
+    identifiers:
+      username: curator
+    attrs:
+      username: curator
+      name: Curator
+      email: curator@example.com
+      password: curator
+      is_active: true
+      groups:
+        - !Find [authentik_core.group, [name, curator]]
+
+  - model: authentik_core.user
+    identifiers:
+      username: user
+    attrs:
+      username: user
+      name: User
+      email: user@example.com
+      password: user
+      is_active: true
+      groups:
+        - !Find [authentik_core.group, [name, user]]
+
+  # 3. LDAP Provider
+  - model: authentik_providers_ldap.ldapprovider
+    id: ceph_ldap_provider
+    identifiers:
+      name: ceph-ldap-provider
+    attrs:
+      name: ceph-ldap-provider
+      authorization_flow: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
+      invalidation_flow: !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
+      base_dn: dc=ldap,dc=goauthentik,dc=io
+      bind_mode: direct
+      search_mode: direct
+      uid_start_number: 2000
+      gid_start_number: 4000
+
+  # 4. Application linking the Provider
+  - model: authentik_core.application
+    identifiers:
+      slug: ceph-ldap-app
+    attrs:
+      name: Ceph LDAP
+      slug: ceph-ldap-app
+      provider: !KeyOf ceph_ldap_provider
+
+  # 5. Outpost Token
+  - model: authentik_core.token
+    identifiers:
+      identifier: ceph-ldap-token
+    attrs:
+      key: "authentik-ldap-token-ceph-12345"
+      user: !Find [authentik_core.user, [username, "akadmin"]]
+      intent: api
+
+  # 6. Embedded Outpost assigning the LDAP provider
+  - model: authentik_outposts.outpost
+    identifiers:
+      name: "authentik Embedded Outpost"
+    attrs:
+      name: "authentik Embedded Outpost"
+      type: ldap
+      providers:
+        - !KeyOf ceph_ldap_provider

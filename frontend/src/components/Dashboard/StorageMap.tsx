@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Map as MapLibreMap,
   NavigationControl,
@@ -47,6 +48,7 @@ const MAP_STYLE: StyleSpecification = {
 };
 
 export function StorageMap({ locations }: StorageMapProps) {
+  const { t } = useTranslation();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
   const [initError, setInitError] = useState<string | null>(null);
@@ -219,32 +221,33 @@ export function StorageMap({ locations }: StorageMapProps) {
       {/* Scoped CSS for archival styling of MapLibre components */}
       <style>{`
         .archival-map-popup .maplibregl-popup-content {
-          background-color: #fcf9f8 !important;
-          border: 1px solid #dbc1ba !important;
+          background-color: var(--color-surface-container-low, #fcf9f8) !important;
+          border: 1px solid var(--color-outline-variant, #dbc1ba) !important;
           border-radius: 0px !important;
-          box-shadow: 0 4px 20px rgba(110, 37, 16, 0.08) !important;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
           padding: 12px 14px !important;
+          color: var(--color-on-surface, #1c1b1b) !important;
         }
         .archival-map-popup .maplibregl-popup-tip {
-          border-top-color: #fcf9f8 !important;
-          border-bottom-color: #fcf9f8 !important;
+          border-top-color: var(--color-surface-container-low, #fcf9f8) !important;
+          border-bottom-color: var(--color-surface-container-low, #fcf9f8) !important;
         }
         .archival-map-container .maplibregl-ctrl-group {
-          background-color: #fcf9f8 !important;
-          border: 1px solid #dbc1ba !important;
+          background-color: var(--color-surface-container-low, #fcf9f8) !important;
+          border: 1px solid var(--color-outline-variant, #dbc1ba) !important;
           border-radius: 0px !important;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
           overflow: hidden;
         }
         .archival-map-container .maplibregl-ctrl-group button {
-          border-bottom: 1px solid #dbc1ba !important;
-          color: #6e2510 !important;
+          border-bottom: 1px solid var(--color-outline-variant, #dbc1ba) !important;
+          color: var(--color-primary, #6e2510) !important;
         }
         .archival-map-container .maplibregl-ctrl-group button:last-child {
           border-bottom: none !important;
         }
         .archival-map-container .maplibregl-ctrl-group button:hover {
-          background-color: #f0eded !important;
+          background-color: var(--color-surface-container-high, #f0eded) !important;
         }
       `}</style>
 
@@ -252,18 +255,20 @@ export function StorageMap({ locations }: StorageMapProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-outline-variant/60">
         <div className="flex items-center gap-2.5">
           <span className="material-symbols-outlined text-primary text-2xl">map</span>
-          <h3 className="font-ebGaramond text-headline-md text-on-surface">Storage Locations</h3>
+          <h3 className="font-ebGaramond text-headline-md text-on-surface">
+            {t("dashboard.locationsTitle")}
+          </h3>
         </div>
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-variant border border-outline-variant text-on-surface-variant font-hankenGrotesk text-data-mono uppercase tracking-wider">
             <span className="h-2 w-2 rounded-full bg-secondary animate-pulse"></span>
-            Zones: {locations.length}
+            {t("dashboard.zonesCount", { count: locations.length })}
           </span>
         </div>
       </div>
 
       {/* Map Canvas Container */}
-      <div className="relative w-full h-[420px] border border-outline-variant bg-[#f6f3f2] overflow-hidden archival-map-container">
+      <div className="relative w-full h-[420px] border border-outline-variant bg-surface-container-low overflow-hidden archival-map-container">
         {initError ? (
           <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-on-surface-variant">
             <span className="material-symbols-outlined text-4xl text-outline mb-2">map</span>
@@ -290,7 +295,7 @@ export function StorageMap({ locations }: StorageMapProps) {
                   {loc.city || loc.label}
                 </span>
                 <span className="text-xs text-on-surface-variant font-mono mt-0.5 block">
-                  Identifier: <span className="text-primary font-bold">{loc.zone}</span>
+                  {t("dashboard.zone")}: <span className="text-primary font-bold">{loc.zone}</span>
                 </span>
               </div>
             </div>
@@ -300,7 +305,7 @@ export function StorageMap({ locations }: StorageMapProps) {
               </span>
               <span className="inline-flex items-center gap-1 mt-1 text-[10px] text-secondary font-hankenGrotesk uppercase tracking-wider font-semibold">
                 <span className="h-1.5 w-1.5 rounded-full bg-secondary"></span>
-                Synchronized
+                {t("artifactDetail.synchronized")}
               </span>
             </div>
           </div>

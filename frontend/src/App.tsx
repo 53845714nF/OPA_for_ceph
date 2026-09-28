@@ -8,6 +8,7 @@ import { ArtifactDetail } from "./pages/ArtifactDetail";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import "./index.css";
 
@@ -16,8 +17,9 @@ const queryClient = new QueryClient();
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <BrowserRouter>
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
@@ -35,7 +37,8 @@ export function App() {
           </Routes>
         </BrowserRouter>
       </AuthProvider>
-    </QueryClientProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
   );
 }
 
