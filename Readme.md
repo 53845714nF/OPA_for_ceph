@@ -53,14 +53,7 @@ Standard-Benutzer (über Authentik-Blueprint vorkonfiguriert):
 
 ### Manuelles / Lokales Entwicklungs-Setup
 
-#### 1. Policy Layer (OPA)
-
-```bash
-cd opa
-podman compose up -d
-```
-
-#### 2. Decision Layer (Service)
+#### Decision Layer (Service)
 
 ```bash
 cd decision_service
@@ -69,7 +62,7 @@ source .venv/bin/activate
 fastapi dev src/main.py
 ```
 
-#### 3. Frontend
+#### Frontend
 
 React Webseite um Uploads und Zonen-Routing zu visualisieren:
 
