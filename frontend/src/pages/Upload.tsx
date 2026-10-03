@@ -15,9 +15,42 @@ export function Upload() {
   const uploadMutation = useFileUpload();
   const { username } = useAuth();
 
+  const handleCategoryChange = (newCategory: string) => {
+    setUploadCategory(newCategory);
+    // When changing category at the top, immediately update all currently queued files
+    setFiles((prev) => prev.map((item) => ({ ...item, category: newCategory })));
+  };
+
   const handleFilesSelected = (selectedFiles: File[]) => {
-    const newFiles = selectedFiles.map(file => ({ file, category: uploadCategory }));
+    let effectiveCategory = uploadCategory;
+
+    // Smart auto-detection for manifest/metadata files (.yml, .yaml, .json, .xml)
+    // If the category is still the initial default ("Roh- und Primärdaten"), auto-switch to "Metadaten und Manifeste"
+    const isManifestCandidate = selectedFiles.some((f) => {
+      const ext = f.name.split('.').pop()?.toLowerCase();
+      return ['yml', 'yaml', 'xml', 'json'].includes(ext || '');
+    });
+
+    if (isManifestCandidate && uploadCategory === CATEGORIES[0]) {
+      effectiveCategory = "Metadaten und Manifeste";
+      setUploadCategory("Metadaten und Manifeste");
+    }
+
+    const newFiles = selectedFiles.map((file) => {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      const itemCategory = (isManifestCandidate && uploadCategory === CATEGORIES[0] && ['yml', 'yaml', 'xml', 'json'].includes(ext || ''))
+        ? "Metadaten und Manifeste"
+        : effectiveCategory;
+      return { file, category: itemCategory };
+    });
+
     setFiles((prev) => [...prev, ...newFiles]);
+  };
+
+  const handleUpdateFileCategory = (index: number, newCategory: string) => {
+    setFiles((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, category: newCategory } : item))
+    );
   };
 
   const removeFile = (indexToRemove: number) => {
@@ -28,8 +61,9 @@ export function Upload() {
     try {
       const results = [];
       for (const item of files) {
+        const cat = item.category || uploadCategory;
         const result = await uploadMutation.mutateAsync({
-          category: item.category,
+          category: cat,
           file: item.file,
           author: username || 'Unknown',
           accessionIdentifier: accessionId,
@@ -61,12 +95,13 @@ export function Upload() {
         <div className="lg:col-span-2 space-y-6">
           <UploadDropzone
             uploadCategory={uploadCategory}
-            setUploadCategory={setUploadCategory}
+            setUploadCategory={handleCategoryChange}
             onFilesSelected={handleFilesSelected}
           />
           <ClassificationQueue
             files={files}
             onRemoveFile={removeFile}
+            onUpdateCategory={handleUpdateFileCategory}
           />
         </div>
 
@@ -82,3 +117,4 @@ export function Upload() {
     </div>
   );
 }
+

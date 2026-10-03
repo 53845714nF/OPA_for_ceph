@@ -1,0 +1,10 @@
+services:
+  decision_service:
+    url: http://ceph-decision-service:8000
+    response_header_timeout_seconds: 5
+
+decision_logs:
+  service: decision_service
+  reporting:
+    min_delay_seconds: 1
+    max_delay_seconds: 2

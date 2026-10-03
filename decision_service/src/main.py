@@ -7,6 +7,7 @@ from routers.auth import router as auth_router
 from routers.provision import router as provision_router
 from routers.artifacts import router as artifacts_router
 from routers.ceph_events import router as ceph_events_router
+from routers.policy_logs import router as policy_logs_router
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ app.include_router(auth_router)
 app.include_router(provision_router)
 app.include_router(artifacts_router)
 app.include_router(ceph_events_router)
+app.include_router(policy_logs_router)
 
 
 @app.get("/health")

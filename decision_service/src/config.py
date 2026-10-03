@@ -62,14 +62,61 @@ CATEGORY_MAPPING = {
     "Abgeleitete Nutzungsdaten": "derived_access",
     "Sensible oder eingeschränkte Daten": "sensitive_restricted",
     "Betriebs- und Auditdaten": "operational_audit",
-    # English/legacy keys
+    # English categories from frontend i18n
+    "Raw and Primary Data": "raw_primary",
+    "Curated Master Data": "curated_master",
+    "Metadata and Manifests": "metadata_manifests",
+    "Derived Access Data": "derived_access",
+    "Sensitive or Restricted Data": "sensitive_restricted",
+    "Operational and Audit Data": "operational_audit",
+    # German short forms & colloquial aliases
+    "Rohdaten": "raw_primary",
+    "Primärdaten": "raw_primary",
+    "Masterdaten": "curated_master",
+    "Metadaten": "metadata_manifests",
+    "Manifeste": "metadata_manifests",
+    "Nutzungsdaten": "derived_access",
+    "Sensible Daten": "sensitive_restricted",
+    "Auditdaten": "operational_audit",
+    # English/legacy keys & bucket name equivalents
     "primary": "raw_primary",
+    "raw": "raw_primary",
+    "raw_primary": "raw_primary",
+    "raw-primary": "raw_primary",
     "master": "curated_master",
+    "curated": "curated_master",
+    "curated_master": "curated_master",
+    "curated-master": "curated_master",
     "manifest": "metadata_manifests",
+    "manifests": "metadata_manifests",
+    "metadata": "metadata_manifests",
+    "metadata_manifests": "metadata_manifests",
+    "metadata-manifests": "metadata_manifests",
     "access": "derived_access",
+    "derived": "derived_access",
+    "derived_access": "derived_access",
+    "derived-access": "derived_access",
     "restricted": "sensitive_restricted",
+    "sensitive": "sensitive_restricted",
+    "sensitive_restricted": "sensitive_restricted",
+    "sensitive-restricted": "sensitive_restricted",
     "audit": "operational_audit",
+    "operational": "operational_audit",
+    "operational_audit": "operational_audit",
+    "operational-audit": "operational_audit",
 }
+
+# Build case-insensitive lookup table
+_LOWER_CATEGORY_MAPPING = {k.lower(): v for k, v in CATEGORY_MAPPING.items()}
+
+def resolve_category(cat: str) -> str:
+    if not cat:
+        return "raw_primary"
+    cleaned = str(cat).strip()
+    if cleaned in CATEGORY_MAPPING:
+        return CATEGORY_MAPPING[cleaned]
+    return _LOWER_CATEGORY_MAPPING.get(cleaned.lower(), cleaned)
+
 
 # JWT Configuration
 SECRET_KEY = getenv("JWT_SECRET_KEY", "super-secret-key-change-me")

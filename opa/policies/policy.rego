@@ -20,7 +20,7 @@ data_categories := {
         "priority": "Critical",
         "retention_days": 30, # 30 Tage für Manifeste
         "object_lock": true,
-        "implications": ["immediate_replication", "versioning", "tamper_protection", "independent_preservation"]
+        "implications": ["local_redundancy", "versioning", "tamper_protection", "independent_preservation"]
     },
     "derived_access": {
         "priority": "Low to medium",
@@ -47,28 +47,125 @@ data_categories := {
 # Liste der Rollen, die zum Upload berechtigt sind
 authorized_upload_roles := ["admin", "curator"]
 
+# Liste der Rollen, die zum Löschen berechtigt sind (Ausschließlich Admin)
+authorized_delete_roles := ["admin"]
+
+# Liste der Rollen, die zum Bearbeiten und Umbenennen berechtigt sind (Admin und Kurator)
+authorized_modify_roles := ["admin", "curator"]
+
+# Hilfsregeln zur Identifikation der Aktionen
+is_delete_action if {
+    input.action == "delete"
+}
+
+is_modify_action if {
+    input.action in ["modify", "edit", "rename", "promote"]
+}
+
+is_promote_action if {
+    input.action == "promote"
+}
+
+is_promote_action if {
+    is_modify_action
+    input.target_bucket in ["curated-master", "curated_master"]
+}
+
+is_promote_action if {
+    is_modify_action
+    input.promote_to_master == true
+}
+
 # Compliance-Regel
 default allow := false
 
-# Erlauben wenn:
+# Erlauben für Upload (Standardfall, wenn weder Löschen noch Bearbeiten):
 # 1. Keine Policy-Verstöße vorliegen
-# 2. Der User eine berechtigte Rolle hat
+# 2. Der User eine berechtigte Upload-Rolle hat
 allow if {
+    not is_delete_action
+    not is_modify_action
     count(violations) == 0
     input.role in authorized_upload_roles
 }
 
-# Detaillierte Validierung der erforderlichen Policies
+# Erlauben für Löschen:
+# 1. Keine Policy-Verstöße vorliegen
+# 2. Der User eine berechtigte Lösch-Rolle hat (ausschließlich Admin)
+allow if {
+    is_delete_action
+    count(violations) == 0
+    input.role in authorized_delete_roles
+}
+
+# Erlauben für Bearbeiten / Umbenennen / Erheben:
+# 1. Keine Policy-Verstöße vorliegen
+# 2. Der User ist Admin oder Kurator
+allow if {
+    is_modify_action
+    count(violations) == 0
+    input.role in authorized_modify_roles
+}
+
+# Spezifische Abfrage für Löschberechtigung
+default allow_delete := false
+allow_delete if {
+    input.role in authorized_delete_roles
+}
+
+# Spezifische Abfrage für Bearbeitungs- und Umbenennungsberechtigung
+default allow_modify := false
+allow_modify if {
+    count(violations) == 0
+    input.role in authorized_modify_roles
+}
+
+# Spezifische Abfrage für Erhebung von Rohdaten zu kuratierten Masterdaten
+default allow_promote := false
+allow_promote if {
+    is_promote_action
+    count(violations) == 0
+    input.role in authorized_modify_roles
+}
+
+# Detaillierte Validierung der erforderlichen Policies (Upload-Kontext)
 violations contains msg if {
+    not is_delete_action
+    not is_modify_action
+    input.category
     some required in data_categories[input.category].implications
     not required in input.applied_policies
     msg := sprintf("Kategorie '%v' erfordert die Policy '%v', aber sie fehlt.", [input.category, required])
 }
 
-# Fehlermeldung bei fehlender Berechtigung
+# Fehlermeldung bei fehlender Upload-Berechtigung
 violations contains msg if {
+    not is_delete_action
+    not is_modify_action
     not input.role in authorized_upload_roles
     msg := sprintf("User mit der Rolle '%v' ist nicht zum Upload berechtigt.", [input.role])
+}
+
+# Fehlermeldung bei fehlender Lösch-Berechtigung
+violations contains msg if {
+    is_delete_action
+    not input.role in authorized_delete_roles
+    msg := sprintf("User mit der Rolle '%v' ist nicht zum Löschen berechtigt. Nur Administratoren dürfen Daten löschen.", [input.role])
+}
+
+# Fehlermeldung bei fehlender Bearbeitungs-/Umbenennungsberechtigung
+violations contains msg if {
+    is_modify_action
+    not input.role in authorized_modify_roles
+    msg := sprintf("User mit der Rolle '%v' ist nicht zum Bearbeiten oder Erheben von Daten berechtigt. Nur Administratoren und Kuratoren dürfen Daten bearbeiten und zu curated_master erheben.", [input.role])
+}
+
+# Validierung: Erhebung zu kuratierten Masterdaten darf ausschließlich von Rohdaten ausgehen
+violations contains msg if {
+    is_promote_action
+    input.bucket
+    not input.bucket in ["raw-primary", "raw_primary"]
+    msg := sprintf("Nur Rohdaten ('raw-primary') können zu 'curated_master' erhoben werden. Das Bucket '%v' ist dafür nicht zulässig.", [input.bucket])
 }
 
 # --- Routing & Retention Logik (Agnostisch für Ceph Multisite) ---
@@ -79,10 +176,6 @@ default allow_replication := false
 
 allow_replication := true if {
     "geographic_redundancy" in data_categories[input.category].implications
-}
-
-allow_replication := true if {
-    "immediate_replication" in data_categories[input.category].implications
 }
 
 allow_replication := true if {

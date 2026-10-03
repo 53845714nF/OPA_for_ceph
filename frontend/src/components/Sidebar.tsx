@@ -9,6 +9,7 @@ export function Sidebar() {
     { name: t("nav.dashboard"), path: "/", icon: "dashboard" },
     { name: t("nav.archive"), path: "/archive", icon: "account_balance" },
     { name: t("nav.upload"), path: "/upload", icon: "cloud_upload" },
+    { name: t("nav.policyLog"), path: "/policy-logs", icon: "policy" },
   ];
 
   return (

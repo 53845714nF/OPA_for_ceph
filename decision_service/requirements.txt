@@ -9,3 +9,4 @@ python-multipart==0.0.9
 boto3==1.34.125
 ldap3>=2.9.1
 paramiko>=3.4.0
+pyyaml>=6.0.1

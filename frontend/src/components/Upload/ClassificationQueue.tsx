@@ -10,9 +10,10 @@ export interface UploadFile {
 interface ClassificationQueueProps {
   files: UploadFile[];
   onRemoveFile: (index: number) => void;
+  onUpdateCategory?: (index: number, newCategory: string) => void;
 }
 
-export function ClassificationQueue({ files, onRemoveFile }: ClassificationQueueProps) {
+export function ClassificationQueue({ files, onRemoveFile, onUpdateCategory }: ClassificationQueueProps) {
   const { t } = useTranslation();
 
   return (
@@ -32,7 +33,7 @@ export function ClassificationQueue({ files, onRemoveFile }: ClassificationQueue
         CATEGORIES.map(category => {
           const categoryFiles = files.map((item, index) => ({ ...item, index })).filter(item => item.category === category);
           const details = CATEGORY_DETAILS[category as keyof typeof CATEGORY_DETAILS];
-          const isSensitive = 'isSensitive' in details ? details.isSensitive : false;
+          const isSensitive = 'isSensitive' in details ? (details as any).isSensitive : false;
 
           if (categoryFiles.length === 0) {
             return null;
@@ -70,16 +71,30 @@ export function ClassificationQueue({ files, onRemoveFile }: ClassificationQueue
 
               <div className="space-y-2">
                 {categoryFiles.map(({ file, index }) => (
-                  <div key={index} className="bg-surface border border-outline-variant p-3 flex justify-between items-center">
-                    <div className="flex items-center gap-3 overflow-hidden">
+                  <div key={index} className="bg-surface border border-outline-variant p-3 flex justify-between items-center gap-4">
+                    <div className="flex items-center gap-3 overflow-hidden min-w-0">
                       <span className="material-symbols-outlined text-on-surface-variant text-sm flex-shrink-0">{details.icon}</span>
                       <span className="font-data-mono text-data-mono text-on-background truncate" title={file.name}>{file.name}</span>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
+                      {onUpdateCategory && (
+                        <select
+                          value={category}
+                          onChange={(e) => onUpdateCategory(index, e.target.value)}
+                          className="font-data-mono text-xs bg-surface-container border border-outline-variant text-on-surface px-2 py-1 rounded focus:outline-none focus:border-primary cursor-pointer hover:border-primary transition-colors"
+                          title="Kategorie dieser Datei ändern"
+                        >
+                          {CATEGORIES.map(c => (
+                            <option key={c} value={c}>
+                              {t(`categories.${c}.name`, { defaultValue: c })}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                       <span className="font-data-mono text-data-mono text-on-surface-variant">{(file.size / 1024).toFixed(1)} KB</span>
                       <button 
                         onClick={(e) => { e.stopPropagation(); onRemoveFile(index); }} 
-                        className="text-error hover:text-error/80 transition-colors"
+                        className="text-error hover:text-error/80 transition-colors p-1"
                         title={t("queue.remove")}
                       >
                         <span className="material-symbols-outlined text-[18px]">close</span>

@@ -11,15 +11,16 @@
 <p align="center">Integration des <a href="https://github.com/open-policy-agent/OPA">Open Policy Agents (OPA)</a> in ein <a href="https://github.com/ceph/ceph">Ceph</a>-Multisite-Setup zur dynamischen Durchsetzung
   datensouveräner Speicher- und Replikationsrichtlinien für digitales Kulturerbe.</p>
 
-<img align="center" src="images/screenshot_01.png" />
+[![OPA for Ceph – Features und Aufbau](https://img.youtube.com/vi/TkHHStT9fkU/maxresdefault.jpg)](https://youtu.be/TkHHStT9fkU)
 
 ## ✨ Features
 
 Open Policy Agent entscheidet:
 
 - Welche Site / Ceph Zone (z. B. zone-a / zone-b)
-- Ob Nutzer die Daten erstellen darf
-- Ob Nutzer die Daten verändern darf
+- Ob Nutzer Daten erstellen darf (Rollen: `admin`, `curator`)
+- Ob Nutzer Daten bearbeiten oder umbenennen darf (Rollen: `admin`, `curator`)
+- Ob Nutzer Daten löschen darf (ausschließlich Rolle `admin`)
 - Welche Replikation oder Erasure Coding Policy
 
 Ergebnis: OPA ist „Policy Compiler“, Ceph ist „Execution Engine“
@@ -44,8 +45,8 @@ Dienste:
 - **Authentik LDAP-Outpost:** `localhost:3389` (LDAP; oder `389` via sysctl)
 
 Standard-Benutzer (über Authentik-Blueprint vorkonfiguriert):
-- `admin` / `admin` (Rolle: `admin`, volle Upload- und Policy-Rechte)
-- `curator` / `curator` (Rolle: `curator`, berechtigt für Uploads)
+- `admin` / `admin` (Rolle: `admin`, volle Upload-, Bearbeitungs-, Lösch- und Policy-Rechte)
+- `curator` / `curator` (Rolle: `curator`, berechtigt für Uploads, Bearbeiten und Umbenennen; kein Löschrecht)
 - `user` / `user` (Rolle: `user`, Standard-Leserechte)
 
 ---

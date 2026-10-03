@@ -10,6 +10,8 @@ export interface Artifact {
   zone: string;
   preview_url?: string;
   accession_id: string;
+  is_yaml?: boolean;
+  version_count?: number;
 }
 
 const fetchArtifactSearch = async (query: string): Promise<Artifact[]> => {

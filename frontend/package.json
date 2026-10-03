@@ -10,14 +10,17 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.100.14",
+    "@types/diff": "^8.0.0",
     "bun-plugin-tailwind": "^0.1.2",
+    "diff": "^9.0.0",
     "i18next": "^26.4.2",
     "maplibre-gl": "^6.10.0",
     "react": "^19",
     "react-dom": "^19",
     "react-i18next": "^17.0.15",
     "react-router-dom": "^7.16.0",
-    "tailwindcss": "^4.1.11"
+    "tailwindcss": "^4.1.11",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@types/react": "^19",

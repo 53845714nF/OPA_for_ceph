@@ -188,8 +188,7 @@ class LDAPClient:
         for g in groups:
             if g in admin_names:
                 return "admin"
-        for g in groups:
-            if g in curator_names:
+            elif g in curator_names:
                 return "curator"
         return "user"
 

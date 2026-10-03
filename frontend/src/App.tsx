@@ -5,6 +5,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Upload } from "./pages/Upload";
 import { Archive } from "./pages/Archive";
 import { ArtifactDetail } from "./pages/ArtifactDetail";
+import { PolicyLog } from "./pages/PolicyLog";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { AuthProvider } from "./context/AuthContext";
@@ -32,6 +33,7 @@ export function App() {
                 <Route path="upload" element={<Upload />} />
                 <Route path="archive" element={<Archive />} />
                 <Route path="artifact/:id" element={<ArtifactDetail />} />
+                <Route path="policy-logs" element={<PolicyLog />} />
               </Route>
             </Route>
           </Routes>
