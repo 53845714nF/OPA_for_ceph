@@ -1,0 +1,164 @@
+services:
+  authentik-postgresql:
+    image: docker.io/postgres:16-alpine
+    container_name: ceph-authentik-postgresql
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${AUTHENTIK_PG_USER:-authentik}
+      POSTGRES_PASSWORD: ${AUTHENTIK_PG_PASS:-authentik_secret_pass}
+      POSTGRES_DB: ${AUTHENTIK_PG_DB:-authentik}
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - authentik_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authentik -d authentik"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  authentik-redis:
+    image: docker.io/redis:alpine
+    container_name: ceph-authentik-redis
+    restart: unless-stopped
+    volumes:
+      - authentik_redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  authentik-server:
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_TAG:-2026.8.3}
+    container_name: ceph-authentik-server
+    restart: unless-stopped
+    command: server
+    environment:
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
+      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_PG_USER:-authentik}
+      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_PG_PASS:-authentik_secret_pass}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:-ceph-authentik-secret-key-32chars}
+      AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_ADMIN_PASSWORD:-admin}
+      AUTHENTIK_BOOTSTRAP_EMAIL: ${AUTHENTIK_ADMIN_EMAIL:-admin@example.com}
+      AUTHENTIK_BOOTSTRAP_TOKEN: ${AUTHENTIK_BOOTSTRAP_TOKEN:-authentik-ldap-token-ceph-12345}
+      AUTHENTIK_DISABLE_UPDATE_CHECK: "true"
+      AUTHENTIK_DISABLE_STARTUP_ANALYTICS: "true"
+    volumes:
+      - ./authentik/blueprints:/blueprints/custom
+      - authentik_media:/media
+      - authentik_custom_templates:/templates
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+    depends_on:
+      authentik-postgresql:
+        condition: service_healthy
+      authentik-redis:
+        condition: service_healthy
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_TAG:-2026.8.3}
+    container_name: ceph-authentik-worker
+    restart: unless-stopped
+    command: worker
+    environment:
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
+      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_PG_USER:-authentik}
+      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_PG_PASS:-authentik_secret_pass}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:-ceph-authentik-secret-key-32chars}
+      AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_ADMIN_PASSWORD:-admin}
+      AUTHENTIK_BOOTSTRAP_EMAIL: ${AUTHENTIK_ADMIN_EMAIL:-admin@example.com}
+      AUTHENTIK_BOOTSTRAP_TOKEN: ${AUTHENTIK_BOOTSTRAP_TOKEN:-authentik-ldap-token-ceph-12345}
+    volumes:
+      - ./authentik/blueprints:/blueprints/custom
+      - authentik_media:/media
+      - authentik_custom_templates:/templates
+    depends_on:
+      authentik-postgresql:
+        condition: service_healthy
+      authentik-redis:
+        condition: service_healthy
+
+  authentik-ldap:
+    image: ghcr.io/goauthentik/ldap:${AUTHENTIK_TAG:-2026.8.3}
+    container_name: ceph-authentik-ldap
+    restart: unless-stopped
+    ports:
+      - "${LDAP_PORT:-3389}:3389"
+    environment:
+      AUTHENTIK_HOST: http://authentik-server:9000
+      AUTHENTIK_INSECURE: "true"
+      AUTHENTIK_TOKEN: ${AUTHENTIK_BOOTSTRAP_TOKEN:-authentik-ldap-token-ceph-12345}
+    depends_on:
+      - authentik-server
+
+  opa:
+    image: docker.io/openpolicyagent/opa:latest
+    container_name: ceph-opa
+    restart: unless-stopped
+    ports:
+      - "8181:8181"
+    volumes:
+      - ./opa/policies:/policies
+      - ./opa/config:/config
+    command:
+      - "run"
+      - "--server"
+      - "--log-level=debug"
+      - "--config-file=/config/opa-config.yaml"
+      - "/policies"
+      - "--addr=0.0.0.0:8181"
+
+  decision_service:
+    build:
+      context: ./decision_service
+      dockerfile: Containerfile
+    container_name: ceph-decision-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      LDAP_SERVER_URL: ${LDAP_SERVER_URL:-ldap://authentik-ldap:3389}
+      LDAP_BASE_DN: ${LDAP_BASE_DN:-dc=ldap,dc=goauthentik,dc=io}
+      LDAP_BIND_DN: ${LDAP_BIND_DN:-cn=akadmin,ou=users,dc=ldap,dc=goauthentik,dc=io}
+      LDAP_BIND_PASSWORD: ${LDAP_BIND_PASSWORD:-admin}
+      AUTHENTIK_URL: ${AUTHENTIK_URL:-http://localhost:9000}
+      OPA_URL: http://opa:8181
+      CEPH_API_URL: ${CEPH_API_URL:-https://192.168.178.166:8443/api}
+      CEPH_USERNAME: ${CEPH_USERNAME:-admin}
+      CEPH_PASSWORD: ${CEPH_PASSWORD:-admin}
+      S3_ENDPOINT_ZONE_A: ${S3_ENDPOINT_ZONE_A:-http://192.168.178.166:80}
+      S3_ENDPOINT_ZONE_B: ${S3_ENDPOINT_ZONE_B:-http://192.168.178.170:80}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-test}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-test}
+      S3_REGION: ${S3_REGION:-default}
+      CEPH_SSH_USER: ${CEPH_SSH_USER:-root}
+      CEPH_SSH_PASSWORD: ${CEPH_SSH_PASSWORD:-packer}
+      CEPH_MASTER_SSH_HOST: ${CEPH_MASTER_SSH_HOST:-192.168.178.166}
+      CEPH_SECONDARY_SSH_HOST: ${CEPH_SECONDARY_SSH_HOST:-192.168.178.170}
+    depends_on:
+      authentik-ldap:
+        condition: service_started
+      opa:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Containerfile
+    container_name: ceph-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - decision_service
+
+volumes:
+  authentik_postgres_data:
+  authentik_redis_data:
+  authentik_media:
+  authentik_custom_templates:
